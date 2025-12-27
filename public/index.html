@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LAN Chat</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- Экран входа -->
+  <section class="auth" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-logo">✈️</div>
+        <div>
+          <div class="auth-title">LAN Chat</div>
+          <div class="auth-sub">Введите ник и войдите в общий чат</div>
+        </div>
+      </div>
+
+      <form id="regForm" class="auth-form">
+        <label class="label" for="nick">Ник</label>
+        <input id="nick" type="text" maxlength="20" placeholder="например: Kamil" required />
+        <button class="primary" type="submit">Войти</button>
+        <div class="toast" id="toast"></div>
+        <div class="tip">Ник видят все. До 20 символов.</div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Основной интерфейс -->
+  <div class="app hidden" id="mainApp">
+
+    <!-- Mobile header -->
+    <header class="m-top">
+      <div class="m-title">
+        <span class="m-dot" id="mDot"></span>
+        <span>LAN Chat</span>
+      </div>
+      <button class="icon-btn" id="leaveBtnMobile" title="Выйти">⎋</button>
+    </header>
+
+    <aside class="sidebar">
+      <div class="sb-top">
+        <div class="profile">
+          <div class="avatar" id="meAvatar">K</div>
+          <div class="pinfo">
+            <div class="pname" id="meName">Гость</div>
+            <div class="pstatus" id="statusLine">Оффлайн</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="leaveBtn" title="Выйти">⎋</button>
+      </div>
+
+      <div class="sb-search">
+        <input id="searchInput" type="text" placeholder="Поиск участников…" />
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-title">Участники</div>
+        <div class="sb-pill" id="onlineCount">0 онлайн</div>
+      </div>
+
+      <ul class="users" id="usersList"></ul>
+
+      <div class="sb-footer">Сервер: Render / Socket.IO</div>
+    </aside>
+
+    <main class="chat">
+      <header class="chat-top">
+        <div>
+          <div class="chat-name">Общий чат</div>
+          <div class="chat-sub" id="chatSub">Подключение…</div>
+        </div>
+      </header>
+
+      <section class="chat-body" id="feedWrap">
+        <div class="feed" id="feed"></div>
+      </section>
+
+      <footer class="composer">
+        <form id="msgForm" class="composer-form">
+          <input id="msg" type="text" placeholder="Сообщение" maxlength="500" autocomplete="off" />
+          <button class="send" type="submit" title="Отправить">➤</button>
+        </form>
+      </footer>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
