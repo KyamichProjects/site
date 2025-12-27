@@ -24,9 +24,13 @@ const io = new Server(server, { cors: { origin: "*" } });
 // ====== USERS ======
 const users = new Map(); // socket.id -> { nick }
 
-// ====== HISTORY PERSISTENCE ======
+// ====== HISTORY (file) ======
 const HISTORY_LIMIT = 300;
 const HISTORY_FILE = path.join(__dirname, "history.json");
+
+// voice limits
+const VOICE_MAX_SECONDS = 60;
+const VOICE_MAX_BASE64_LEN = 2_000_000; // ~1.5MB-ish
 
 function loadHistory() {
   try {
@@ -76,7 +80,7 @@ io.on("connection", (socket) => {
     users.set(socket.id, { nick });
     ack?.({ ok: true, nick });
 
-    // отправить историю только вошедшему
+    // историю — только вошедшему
     socket.emit("chat:history", { messages: history });
 
     // системное (в историю)
@@ -99,10 +103,34 @@ io.on("connection", (socket) => {
     io.emit("chat:message", msg);
   });
 
-  socket.on("disconnect", () => {
+  // ✅ голосовые
+  socket.on("chat:voice", (payload) => {
     const user = users.get(socket.id);
     if (!user) return;
 
+    const mime = String(payload?.mime || "");
+    const b64 = String(payload?.data || "");
+    const duration = Number(payload?.seconds || 0);
+
+    if (!mime.startsWith("audio/")) return;
+    if (!b64 || b64.length > VOICE_MAX_BASE64_LEN) return;
+    if (duration > VOICE_MAX_SECONDS) return;
+
+    const msg = {
+      type: "voice",
+      nick: user.nick,
+      mime,
+      data: b64, // чистый base64 (без "data:...;base64,")
+      ts: Date.now()
+    };
+
+    pushHistory(msg);
+    io.emit("chat:voice", msg);
+  });
+
+  socket.on("disconnect", () => {
+    const user = users.get(socket.id);
+    if (!user) return;
     users.delete(socket.id);
 
     const sys = { type: "system", text: `@${user.nick} вышел`, ts: Date.now() };
@@ -114,7 +142,6 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 10000;
-// Render сам выставляет PORT. 0.0.0.0 обязательно.
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
