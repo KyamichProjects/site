@@ -8,6 +8,7 @@
 </head>
 <body>
 
+  <!-- ===== AUTH / LOGIN ===== -->
   <section class="auth" id="authScreen">
     <div class="auth-card">
       <div class="auth-brand">
@@ -18,18 +19,22 @@
         </div>
       </div>
 
-      <form id="regForm" class="auth-form">
+      <!-- ✅ ВАЖНО: запрещаем submit, чтобы страница НЕ перезагружалась -->
+      <form id="regForm" class="auth-form" onsubmit="return false;" autocomplete="off">
         <label class="label" for="nick">Ник</label>
         <input id="nick" type="text" maxlength="20" placeholder="например: Kamil" required />
-        <button class="primary" id="enterBtn" type="submit">Войти</button>
+        <!-- ✅ ВАЖНО: кнопка НЕ submit -->
+        <button class="primary" id="enterBtn" type="button">Войти</button>
         <div class="toast" id="toast"></div>
         <div class="tip">Ник видят все. До 20 символов.</div>
       </form>
     </div>
   </section>
 
+  <!-- ===== APP ===== -->
   <div class="app hidden" id="mainApp">
 
+    <!-- Mobile header -->
     <header class="m-top">
       <div class="m-title">
         <span class="m-dot" id="mDot"></span>
@@ -38,6 +43,7 @@
       <button class="icon-btn" id="leaveBtnMobile" title="Выйти">⎋</button>
     </header>
 
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sb-top">
         <div class="profile">
@@ -60,9 +66,11 @@
       </div>
 
       <ul class="users" id="usersList"></ul>
-      <div class="sb-footer">Server: Render</div>
+
+      <div class="sb-footer">Server: Render / Socket.IO</div>
     </aside>
 
+    <!-- Chat -->
     <main class="chat">
       <header class="chat-top">
         <div>
@@ -76,4 +84,29 @@
       </section>
 
       <footer class="composer">
-        <form id="msgFor
+        <form id="msgForm" class="composer-form" autocomplete="off">
+          <button class="attach" id="attachBtn" type="button" title="Фото/Видео">📎</button>
+          <button class="mic" id="micBtn" type="button" title="Голосовое">🎤</button>
+
+          <input id="msg" type="text" placeholder="Сообщение" maxlength="500" autocomplete="off" />
+
+          <button class="send" id="sendBtn" type="submit" title="Отправить">➤</button>
+
+          <!-- file picker -->
+          <input
+            id="fileInput"
+            class="fileInput"
+            type="file"
+            accept="image/*,video/*"
+            capture="environment"
+          />
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
