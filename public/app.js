@@ -34,15 +34,17 @@ let socket = null;
 let myNick = null;
 let usersCache = [];
 
-// защита от двойного входа/дублей
 let isJoining = false;
 let sendLock = false;
 
-// voice
+// voice record
 let recorder = null;
 let recording = false;
 let chunks = [];
 let recordStartedAt = 0;
+
+// keep one playing voice at a time
+let activeVoiceAudio = null;
 
 function initials(name){
   const s = (name || "?").trim();
@@ -51,9 +53,6 @@ function initials(name){
 function fmtTime(ts){
   const d = new Date(ts);
   return d.toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" });
-}
-function scrollBottom(){
-  feedWrap.scrollTop = feedWrap.scrollHeight;
 }
 function showToast(text, isError=false){
   toast.textContent = text;
@@ -68,7 +67,10 @@ function setConnected(ok){
   chatSub.textContent = s;
   if (mDot) mDot.classList.toggle("ok", ok);
 }
-
+function scrollBottom(){
+  // ✅ всегда вниз
+  feedWrap.scrollTop = feedWrap.scrollHeight;
+}
 function addSystem(text){
   const el = document.createElement("div");
   el.className = "sys";
@@ -80,50 +82,131 @@ function addSystem(text){
 function addTextMessage({ nick, text, ts }){
   const el = document.createElement("div");
   el.className = "msg" + (nick === myNick ? " me" : "");
-
-  const n = document.createElement("div");
-  n.className = "nick";
-  n.textContent = nick;
-
-  const t = document.createElement("div");
-  t.className = "text";
-  t.textContent = text;
-
-  const time = document.createElement("div");
-  time.className = "time";
-  time.textContent = fmtTime(ts);
-
-  el.appendChild(n);
-  el.appendChild(t);
-  el.appendChild(time);
-
+  el.innerHTML = `
+    <div class="nick"></div>
+    <div class="text"></div>
+    <div class="time"></div>
+  `;
+  el.querySelector(".nick").textContent = nick;
+  el.querySelector(".text").textContent = text;
+  el.querySelector(".time").textContent = fmtTime(ts);
   feed.appendChild(el);
   scrollBottom();
+}
+
+function fmtClock(seconds){
+  seconds = Math.max(0, Math.floor(seconds));
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2,"0")}`;
 }
 
 function addVoiceMessage({ nick, mime, data, ts }){
   const el = document.createElement("div");
   el.className = "msg" + (nick === myNick ? " me" : "");
 
-  const n = document.createElement("div");
-  n.className = "nick";
-  n.textContent = nick;
-
-  const player = document.createElement("audio");
-  player.controls = true;
-
+  // base64 -> blob url
   const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
   const blob = new Blob([bytes], { type: mime || "audio/webm" });
   const url = URL.createObjectURL(blob);
-  player.src = url;
+
+  const audio = document.createElement("audio");
+  audio.src = url;
+
+  const voice = document.createElement("div");
+  voice.className = "voice";
+
+  const play = document.createElement("button");
+  play.className = "v-play";
+  play.type = "button";
+  play.textContent = "▶";
+
+  const bar = document.createElement("div");
+  bar.className = "v-bar";
+  const fill = document.createElement("div");
+  fill.className = "v-fill";
+  bar.appendChild(fill);
+
+  voice.appendChild(play);
+  voice.appendChild(bar);
+  voice.appendChild(audio);
+
+  const meta = document.createElement("div");
+  meta.className = "v-meta";
+  const cur = document.createElement("div");
+  cur.className = "v-cur";
+  cur.textContent = "0:00";
+  const dur = document.createElement("div");
+  dur.className = "v-dur";
+  dur.textContent = "--:--";
+  meta.appendChild(cur);
+  meta.appendChild(dur);
 
   const time = document.createElement("div");
   time.className = "time";
   time.textContent = fmtTime(ts);
 
-  el.appendChild(n);
-  el.appendChild(player);
+  const nickEl = document.createElement("div");
+  nickEl.className = "nick";
+  nickEl.textContent = nick;
+
+  el.appendChild(nickEl);
+  el.appendChild(voice);
+  el.appendChild(meta);
   el.appendChild(time);
+
+  // events
+  audio.addEventListener("loadedmetadata", () => {
+    dur.textContent = fmtClock(audio.duration || 0);
+  });
+
+  function stopOther(){
+    if (activeVoiceAudio && activeVoiceAudio !== audio){
+      activeVoiceAudio.pause();
+      activeVoiceAudio.currentTime = 0;
+    }
+    activeVoiceAudio = audio;
+  }
+
+  play.addEventListener("click", () => {
+    stopOther();
+    if (audio.paused){
+      audio.play();
+      play.textContent = "⏸";
+    } else {
+      audio.pause();
+      play.textContent = "▶";
+    }
+  });
+
+  audio.addEventListener("ended", () => {
+    play.textContent = "▶";
+    fill.style.width = "0%";
+    cur.textContent = "0:00";
+  });
+
+  audio.addEventListener("timeupdate", () => {
+    const d = audio.duration || 0;
+    const t = audio.currentTime || 0;
+    cur.textContent = fmtClock(t);
+    if (d > 0) fill.style.width = `${(t/d)*100}%`;
+  });
+
+  // click on bar to seek
+  bar.addEventListener("click", (e) => {
+    stopOther();
+    const rect = bar.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const p = Math.min(1, Math.max(0, x / rect.width));
+    const d = audio.duration || 0;
+    if (d > 0){
+      audio.currentTime = d * p;
+      if (audio.paused){
+        audio.play();
+        play.textContent = "⏸";
+      }
+    }
+  });
 
   feed.appendChild(el);
   scrollBottom();
@@ -138,17 +221,9 @@ function renderUsers(list){
   filtered.forEach(u => {
     const li = document.createElement("li");
     li.className = "user";
-
-    const av = document.createElement("div");
-    av.className = "uav";
-    av.textContent = initials(u);
-
-    const nm = document.createElement("div");
-    nm.className = "uname";
-    nm.textContent = u;
-
-    li.appendChild(av);
-    li.appendChild(nm);
+    li.innerHTML = `<div class="uav"></div><div class="uname"></div>`;
+    li.querySelector(".uav").textContent = initials(u);
+    li.querySelector(".uname").textContent = u;
     usersList.appendChild(li);
   });
 
@@ -174,9 +249,9 @@ function cleanupSocket(){
 }
 
 function connectAndJoin(nick){
-  if (isJoining) return;  // ✅ защита от 2 кликов
+  if (isJoining) return;
   isJoining = true;
-  enterBtn.disabled = true;
+  if (enterBtn) enterBtn.disabled = true;
 
   cleanupSocket();
   feed.innerHTML = "";
@@ -191,9 +266,7 @@ function connectAndJoin(nick){
   socket.on("disconnect", () => setConnected(false));
   socket.on("connect_error", () => setConnected(false));
 
-  socket.on("users:list", (payload) => {
-    renderUsers(payload?.users || []);
-  });
+  socket.on("users:list", (payload) => renderUsers(payload?.users || []));
 
   socket.on("chat:history", (payload) => {
     const msgs = payload?.messages || [];
@@ -203,6 +276,7 @@ function connectAndJoin(nick){
       if (m.type === "message") addTextMessage(m);
       if (m.type === "voice") addVoiceMessage(m);
     });
+    scrollBottom();
   });
 
   socket.on("chat:system", (m) => addSystem(m.text));
@@ -211,7 +285,7 @@ function connectAndJoin(nick){
 
   socket.emit("user:join", { nick }, (res) => {
     isJoining = false;
-    enterBtn.disabled = false;
+    if (enterBtn) enterBtn.disabled = false;
 
     if (!res?.ok){
       showToast(res?.error || "Не удалось войти", true);
@@ -239,34 +313,29 @@ function leave(){
   showAuthUI();
 }
 
-/* отправка текста (с простым локом) */
+/* send text */
 msgForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = (msgInput.value || "").trim();
   if (!text || !socket) return;
   if (sendLock) return;
-
   sendLock = true;
+
   socket.emit("chat:message", { text });
   msgInput.value = "";
-
   setTimeout(() => (sendLock = false), 120);
 });
 
-leaveBtn.addEventListener("click", leave);
-leaveBtnMobile?.addEventListener("click", leave);
+/* ===== voice record ===== */
+function blobToBase64(blob){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = reject;
+    r.onload = () => resolve(r.result);
+    r.readAsDataURL(blob);
+  });
+}
 
-searchInput.addEventListener("input", () => renderUsers(usersCache));
-
-regForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const nick = (nickInput.value || "").trim().slice(0, 20);
-  if (!nick) return showToast("Введите ник", true);
-  if (nick.length < 2) return showToast("Ник слишком короткий", true);
-  connectAndJoin(nick);
-});
-
-/* ==== VOICE ==== */
 async function startRecording(){
   if (recording) return;
   if (!navigator.mediaDevices?.getUserMedia){
@@ -275,40 +344,28 @@ async function startRecording(){
   }
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const preferred = [
-    "audio/webm;codecs=opus",
-    "audio/webm",
-    "audio/ogg;codecs=opus",
-    "audio/ogg"
-  ];
+  const preferred = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
   const mime = preferred.find(t => MediaRecorder.isTypeSupported(t)) || "";
 
   chunks = [];
   recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
 
-  recorder.ondataavailable = (e) => {
-    if (e.data && e.data.size > 0) chunks.push(e.data);
-  };
+  recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
 
   recorder.onstop = async () => {
-    try {
+    try{
       stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
       const seconds = Math.round((Date.now() - recordStartedAt) / 1000);
 
-      // ограничение 60 сек
       if (seconds > 60){
         addSystem("Голосовое слишком длинное (макс 60 сек)");
         return;
       }
 
-      const b64 = await blobToBase64(blob); // "data:audio/...;base64,AAA"
-      const pure = b64.split(",")[1] || "";
-
-      // отправляем
-      if (socket){
-        socket.emit("chat:voice", { mime: blob.type || "audio/webm", data: pure, seconds });
-      }
+      const b64 = await blobToBase64(blob);
+      const pure = (b64.split(",")[1] || "");
+      if (socket) socket.emit("chat:voice", { mime: blob.type || "audio/webm", data: pure, seconds });
     } catch {
       addSystem("Не удалось отправить голосовое");
     }
@@ -328,15 +385,6 @@ function stopRecording(){
   recorder.stop();
 }
 
-function blobToBase64(blob){
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onerror = reject;
-    r.onload = () => resolve(r.result);
-    r.readAsDataURL(blob);
-  });
-}
-
 micBtn.addEventListener("click", async () => {
   try{
     if (!socket){
@@ -352,7 +400,20 @@ micBtn.addEventListener("click", async () => {
   }
 });
 
-/* автологин после F5 */
+/* misc */
+leaveBtn.addEventListener("click", leave);
+leaveBtnMobile?.addEventListener("click", leave);
+searchInput.addEventListener("input", () => renderUsers(usersCache));
+
+regForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const nick = (nickInput.value || "").trim().slice(0, 20);
+  if (!nick) return showToast("Введите ник", true);
+  if (nick.length < 2) return showToast("Ник слишком короткий", true);
+  connectAndJoin(nick);
+});
+
+/* auto login */
 const savedNick = localStorage.getItem("nick");
 if (savedNick && savedNick.trim().length >= 2){
   connectAndJoin(savedNick.trim().slice(0, 20));
