@@ -1,4 +1,4 @@
-const SERVER_URL = window.location.origin;
+ const SERVER_URL = window.location.origin;
 
 const authScreen = document.getElementById("authScreen");
 const mainApp = document.getElementById("mainApp");
@@ -212,16 +212,26 @@ function connectAndJoin(nick){
   socket.on("chat:media", (m) => addMediaMessage(m));
 
   socket.emit("user:join", { nick }, (res) => {
-    isJoining = false;
-    if (enterBtn) enterBtn.disabled = false;
+  isJoining = false;
+  if (enterBtn) enterBtn.disabled = false;
 
-    if (!res?.ok){
-      showToast(res?.error || "Не удалось войти", true);
-      cleanupSocket();
-      localStorage.removeItem("nick");
-      showAuthUI();
-      return;
-    }
+  // ✅ если сервер не ответил или ошибка — остаёмся на экране входа
+  if (!res || !res.ok) {
+    showToast((res && res.error) ? res.error : "Не удалось войти (проверь соединение)", true);
+    cleanupSocket();
+
+    // ❌ НЕ удаляем ник
+    // ❌ НЕ вызываем showAuthUI()
+    return;
+  }
+
+  // ✅ успех
+  myNick = res.nick;
+  meName.textContent = myNick;
+  meAvatar.textContent = initials(myNick);
+  localStorage.setItem("nick", myNick);
+  showChatUI();
+});
 
     myNick = res.nick;
     meName.textContent = myNick;
@@ -394,3 +404,4 @@ if (savedNick && savedNick.trim().length >= 2){
 } else {
   showAuthUI();
 }
+
