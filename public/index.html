@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LAN Chat</title>
+  <title>Общалка</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -22,7 +22,7 @@
       <form id="regForm" class="auth-form">
         <label class="label" for="nick">Ник</label>
         <input id="nick" type="text" maxlength="20" placeholder="например: Kamil" required />
-        <button class="primary" type="submit">Войти</button>
+        <button class="primary" id="enterBtn" type="submit">Войти</button>
         <div class="toast" id="toast"></div>
         <div class="tip">Ник видят все. До 20 символов.</div>
       </form>
@@ -81,8 +81,9 @@
 
       <footer class="composer">
         <form id="msgForm" class="composer-form">
+          <button class="mic" id="micBtn" type="button" title="Голосовое">🎤</button>
           <input id="msg" type="text" placeholder="Сообщение" maxlength="500" autocomplete="off" />
-          <button class="send" type="submit" title="Отправить">➤</button>
+          <button class="send" id="sendBtn" type="submit" title="Отправить">➤</button>
         </form>
       </footer>
     </main>
