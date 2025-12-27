@@ -1,5 +1,6 @@
- const SERVER_URL = window.location.origin;
+const SERVER_URL = window.location.origin;
 
+/* ===== elements ===== */
 const authScreen = document.getElementById("authScreen");
 const mainApp = document.getElementById("mainApp");
 
@@ -26,32 +27,25 @@ const sendBtn = document.getElementById("sendBtn");
 
 const attachBtn = document.getElementById("attachBtn");
 const fileInput = document.getElementById("fileInput");
-
 const micBtn = document.getElementById("micBtn");
 
 const leaveBtn = document.getElementById("leaveBtn");
-const mDot = document.getElementById("mDot");
 const leaveBtnMobile = document.getElementById("leaveBtnMobile");
+const mDot = document.getElementById("mDot");
 
+/* ===== state ===== */
 let socket = null;
 let myNick = null;
 let usersCache = [];
 let isJoining = false;
 let sendLock = false;
 
-// voice
-let recorder = null;
-let recording = false;
-let chunks = [];
-let recordStartedAt = 0;
-
+/* ===== helpers ===== */
 function initials(name){
-  const s = (name || "?").trim();
-  return s.slice(0,1).toUpperCase();
+  return (name || "?").trim().slice(0,1).toUpperCase();
 }
 function fmtTime(ts){
-  const d = new Date(ts);
-  return d.toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" });
+  return new Date(ts).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
 }
 function scrollBottom(){
   feedWrap.scrollTop = feedWrap.scrollHeight;
@@ -59,103 +53,17 @@ function scrollBottom(){
 function showToast(text, isError=false){
   toast.textContent = text;
   toast.classList.add("show");
-  toast.style.borderColor = isError ? "rgba(239,68,68,.35)" : "rgba(255,255,255,.10)";
-  toast.style.color = isError ? "rgba(255,210,210,.95)" : "var(--muted)";
-  setTimeout(() => toast.classList.remove("show"), 2400);
+  toast.style.color = isError ? "#ffd6d6" : "#d6e6ff";
+  setTimeout(()=>toast.classList.remove("show"), 3000);
 }
 function setConnected(ok){
-  const s = ok ? "Онлайн" : "Оффлайн / переподключение…";
+  const s = ok ? "Онлайн" : "Оффлайн";
   statusLine.textContent = s;
   chatSub.textContent = s;
   if (mDot) mDot.classList.toggle("ok", ok);
 }
 
-function addSystem(text){
-  const el = document.createElement("div");
-  el.className = "sys";
-  el.textContent = text;
-  feed.appendChild(el);
-  scrollBottom();
-}
-
-function addTextMessage({ nick, text, ts }){
-  const el = document.createElement("div");
-  el.className = "msg" + (nick === myNick ? " me" : "");
-  el.innerHTML = `<div class="nick"></div><div class="text"></div><div class="time"></div>`;
-  el.querySelector(".nick").textContent = nick;
-  el.querySelector(".text").textContent = text;
-  el.querySelector(".time").textContent = fmtTime(ts);
-  feed.appendChild(el);
-  scrollBottom();
-}
-
-function addVoiceMessage({ nick, mime, data, ts }){
-  const el = document.createElement("div");
-  el.className = "msg" + (nick === myNick ? " me" : "");
-  el.innerHTML = `<div class="nick"></div><div class="time"></div>`;
-  el.querySelector(".nick").textContent = nick;
-  el.querySelector(".time").textContent = fmtTime(ts);
-
-  const player = document.createElement("audio");
-  player.controls = true;
-
-  const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
-  const blob = new Blob([bytes], { type: mime || "audio/webm" });
-  player.src = URL.createObjectURL(blob);
-
-  el.insertBefore(player, el.querySelector(".time"));
-  feed.appendChild(el);
-  scrollBottom();
-}
-
-function addMediaMessage({ nick, kind, url, mime, name, ts }){
-  const el = document.createElement("div");
-  el.className = "msg" + (nick === myNick ? " me" : "");
-  el.innerHTML = `<div class="nick"></div><div class="time"></div>`;
-  el.querySelector(".nick").textContent = nick;
-  el.querySelector(".time").textContent = fmtTime(ts);
-
-  const wrap = document.createElement("div");
-  wrap.className = "media";
-
-  const fullUrl = new URL(url, window.location.origin).toString();
-
-  if (kind === "image"){
-    const img = document.createElement("img");
-    img.src = fullUrl;
-    img.alt = name || "image";
-    wrap.appendChild(img);
-  } else {
-    const video = document.createElement("video");
-    video.src = fullUrl;
-    video.controls = true;
-    video.playsInline = true;
-    wrap.appendChild(video);
-  }
-
-  el.insertBefore(wrap, el.querySelector(".time"));
-  feed.appendChild(el);
-  scrollBottom();
-}
-
-function renderUsers(list){
-  usersCache = list.slice();
-  const q = (searchInput.value || "").trim().toLowerCase();
-  const filtered = q ? list.filter(u => u.toLowerCase().includes(q)) : list;
-
-  usersList.innerHTML = "";
-  filtered.forEach(u => {
-    const li = document.createElement("li");
-    li.className = "user";
-    li.innerHTML = `<div class="uav"></div><div class="uname"></div>`;
-    li.querySelector(".uav").textContent = initials(u);
-    li.querySelector(".uname").textContent = u;
-    usersList.appendChild(li);
-  });
-
-  onlineCount.textContent = `${list.length} онлайн`;
-}
-
+/* ===== UI ===== */
 function showChatUI(){
   authScreen.classList.add("hidden");
   mainApp.classList.remove("hidden");
@@ -167,6 +75,66 @@ function showAuthUI(){
   nickInput.focus();
 }
 
+/* ===== messages ===== */
+function addSystem(text){
+  const el = document.createElement("div");
+  el.className = "sys";
+  el.textContent = text;
+  feed.appendChild(el);
+  scrollBottom();
+}
+function addTextMessage({ nick, text, ts }){
+  const el = document.createElement("div");
+  el.className = "msg" + (nick === myNick ? " me" : "");
+  el.innerHTML = `
+    <div class="nick">${nick}</div>
+    <div class="text"></div>
+    <div class="time">${fmtTime(ts)}</div>
+  `;
+  el.querySelector(".text").textContent = text;
+  feed.appendChild(el);
+  scrollBottom();
+}
+function addMediaMessage({ nick, kind, url, ts }){
+  const el = document.createElement("div");
+  el.className = "msg" + (nick === myNick ? " me" : "");
+  const full = new URL(url, window.location.origin).toString();
+
+  let media;
+  if (kind === "image"){
+    media = document.createElement("img");
+    media.src = full;
+    media.style.maxWidth = "320px";
+    media.style.borderRadius = "12px";
+  } else {
+    media = document.createElement("video");
+    media.src = full;
+    media.controls = true;
+    media.style.maxWidth = "320px";
+    media.style.borderRadius = "12px";
+  }
+
+  el.innerHTML = `<div class="nick">${nick}</div>`;
+  el.appendChild(media);
+  el.innerHTML += `<div class="time">${fmtTime(ts)}</div>`;
+  feed.appendChild(el);
+  scrollBottom();
+}
+
+/* ===== users ===== */
+function renderUsers(list){
+  usersCache = list.slice();
+  usersList.innerHTML = "";
+  list.forEach(u=>{
+    const li = document.createElement("li");
+    li.className = "user";
+    li.innerHTML = `<div class="uav">${initials(u)}</div><div class="uname">${u}</div>`;
+    usersList.appendChild(li);
+  });
+  onlineCount.textContent = `${list.length} онлайн`;
+}
+
+/* ===== socket ===== */
 function cleanupSocket(){
   if (!socket) return;
   socket.removeAllListeners();
@@ -177,61 +145,48 @@ function cleanupSocket(){
 function connectAndJoin(nick){
   if (isJoining) return;
   isJoining = true;
-  if (enterBtn) enterBtn.disabled = true;
+  enterBtn.disabled = true;
 
   cleanupSocket();
   feed.innerHTML = "";
 
-  socket = io(SERVER_URL, {
-    transports: ["websocket", "polling"],
-    reconnection: true,
-    reconnectionAttempts: 50
-  });
+  socket = io(SERVER_URL, { transports:["websocket","polling"] });
 
-  socket.on("connect", () => setConnected(true));
-  socket.on("disconnect", () => setConnected(false));
-  socket.on("connect_error", () => setConnected(false));
+  socket.on("connect", ()=>setConnected(true));
+  socket.on("disconnect", ()=>setConnected(false));
 
-  socket.on("users:list", (payload) => renderUsers(payload?.users || []));
+  socket.on("users:list", p=>renderUsers(p.users||[]));
+  socket.on("chat:system", m=>addSystem(m.text));
+  socket.on("chat:message", m=>addTextMessage(m));
+  socket.on("chat:media", m=>addMediaMessage(m));
 
-  socket.on("chat:history", (payload) => {
-    const msgs = payload?.messages || [];
+  socket.on("chat:history", p=>{
     feed.innerHTML = "";
-    msgs.forEach(m => {
-      if (m.type === "system") addSystem(m.text);
-      if (m.type === "message") addTextMessage(m);
-      if (m.type === "voice") addVoiceMessage(m);
-      if (m.type === "media") addMediaMessage(m);
+    (p.messages||[]).forEach(m=>{
+      if (m.type==="system") addSystem(m.text);
+      if (m.type==="message") addTextMessage(m);
+      if (m.type==="media") addMediaMessage(m);
     });
-    scrollBottom();
   });
 
-  socket.on("chat:system", (m) => addSystem(m.text));
-  socket.on("chat:message", (m) => addTextMessage(m));
-  socket.on("chat:voice", (m) => addVoiceMessage(m));
-  socket.on("chat:media", (m) => addMediaMessage(m));
-
-  socket.emit("user:join", { nick }, (res) => {
-  isJoining = false;
-  if (enterBtn) enterBtn.disabled = false;
-
-  // ✅ если сервер не ответил или ошибка — остаёмся на экране входа
-  if (!res || !res.ok) {
-    showToast((res && res.error) ? res.error : "Не удалось войти (проверь соединение)", true);
+  /* join with timeout */
+  let timeout = setTimeout(()=>{
+    isJoining=false;
+    enterBtn.disabled=false;
+    showToast("Сервер не ответил. Попробуй ещё раз.", true);
     cleanupSocket();
+  },5000);
 
-    // ❌ НЕ удаляем ник
-    // ❌ НЕ вызываем showAuthUI()
-    return;
-  }
+  socket.emit("user:join", { nick }, (res)=>{
+    clearTimeout(timeout);
+    isJoining=false;
+    enterBtn.disabled=false;
 
-  // ✅ успех
-  myNick = res.nick;
-  meName.textContent = myNick;
-  meAvatar.textContent = initials(myNick);
-  localStorage.setItem("nick", myNick);
-  showChatUI();
-});
+    if (!res || !res.ok){
+      showToast(res?.error || "Не удалось войти", true);
+      cleanupSocket();
+      return;
+    }
 
     myNick = res.nick;
     meName.textContent = myNick;
@@ -241,167 +196,39 @@ function connectAndJoin(nick){
   });
 }
 
-function leave(){
-  cleanupSocket();
-  setConnected(false);
-  usersList.innerHTML = "";
-  onlineCount.textContent = "0 онлайн";
-  myNick = null;
-  localStorage.removeItem("nick");
-  showAuthUI();
-}
-
-/* send text */
-msgForm.addEventListener("submit", (e) => {
+/* ===== events ===== */
+regForm.addEventListener("submit", e=>{
   e.preventDefault();
-  const text = (msgInput.value || "").trim();
-  if (!text || !socket) return;
-  if (sendLock) return;
-  sendLock = true;
-
-  socket.emit("chat:message", { text });
-  msgInput.value = "";
-  setTimeout(() => (sendLock = false), 120);
-});
-
-/* ===== upload image/video ===== */
-attachBtn.addEventListener("click", () => {
-  if (!socket){
-    addSystem("Сначала войди в чат");
-    return;
-  }
-  fileInput.value = "";
-  fileInput.click();
-});
-
-fileInput.addEventListener("change", async () => {
-  const file = fileInput.files?.[0];
-  if (!file) return;
-
-  // лимит на клиенте тоже
-  const MAX = 15 * 1024 * 1024;
-  if (file.size > MAX){
-    addSystem("Файл слишком большой (макс 15MB)");
-    return;
-  }
-
-  const isImage = file.type.startsWith("image/");
-  const isVideo = file.type.startsWith("video/");
-  if (!isImage && !isVideo){
-    addSystem("Можно отправлять только фото или видео");
-    return;
-  }
-
-  addSystem(`Загрузка: ${file.name}…`);
-
-  try{
-    const fd = new FormData();
-    fd.append("file", file);
-
-    const res = await fetch("/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || "upload failed");
-
-    const kind = isImage ? "image" : "video";
-    socket.emit("chat:media", { kind, url: data.url, mime: data.mime, name: data.name });
-
-  } catch (e){
-    addSystem("Не удалось загрузить файл");
-  }
-});
-
-/* ===== voice ===== */
-function blobToBase64(blob){
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onerror = reject;
-    r.onload = () => resolve(r.result);
-    r.readAsDataURL(blob);
-  });
-}
-
-async function startRecording(){
-  if (recording) return;
-  if (!navigator.mediaDevices?.getUserMedia){
-    addSystem("Браузер не поддерживает запись аудио");
-    return;
-  }
-
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const preferred = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
-  const mime = preferred.find(t => MediaRecorder.isTypeSupported(t)) || "";
-
-  chunks = [];
-  recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-
-  recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-
-  recorder.onstop = async () => {
-    try{
-      stream.getTracks().forEach(t => t.stop());
-      const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-      const seconds = Math.round((Date.now() - recordStartedAt) / 1000);
-
-      if (seconds > 60){
-        addSystem("Голосовое слишком длинное (макс 60 сек)");
-        return;
-      }
-
-      const b64 = await blobToBase64(blob);
-      const pure = (b64.split(",")[1] || "");
-      if (socket) socket.emit("chat:voice", { mime: blob.type || "audio/webm", data: pure, seconds });
-    } catch {
-      addSystem("Не удалось отправить голосовое");
-    }
-  };
-
-  recordStartedAt = Date.now();
-  recording = true;
-  micBtn.classList.add("rec");
-  addSystem("🎙️ Запись… нажми ещё раз чтобы отправить");
-  recorder.start();
-}
-
-function stopRecording(){
-  if (!recording || !recorder) return;
-  recording = false;
-  micBtn.classList.remove("rec");
-  recorder.stop();
-}
-
-micBtn.addEventListener("click", async () => {
-  try{
-    if (!socket){
-      addSystem("Сначала войди в чат");
-      return;
-    }
-    if (!recording) await startRecording();
-    else stopRecording();
-  } catch {
-    addSystem("Нет доступа к микрофону");
-    micBtn.classList.remove("rec");
-    recording = false;
-  }
-});
-
-/* misc */
-leaveBtn.addEventListener("click", leave);
-leaveBtnMobile?.addEventListener("click", leave);
-searchInput.addEventListener("input", () => renderUsers(usersCache));
-
-regForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const nick = (nickInput.value || "").trim().slice(0, 20);
-  if (!nick) return showToast("Введите ник", true);
+  const nick = (nickInput.value||"").trim().slice(0,20);
+  nickInput.value = nick;
   if (nick.length < 2) return showToast("Ник слишком короткий", true);
   connectAndJoin(nick);
 });
 
-/* auto login */
-const savedNick = localStorage.getItem("nick");
-if (savedNick && savedNick.trim().length >= 2){
-  connectAndJoin(savedNick.trim().slice(0, 20));
-} else {
+msgForm.addEventListener("submit", e=>{
+  e.preventDefault();
+  const text = msgInput.value.trim();
+  if (!text || !socket || sendLock) return;
+  sendLock=true;
+  socket.emit("chat:message",{text});
+  msgInput.value="";
+  setTimeout(()=>sendLock=false,150);
+});
+
+leaveBtn.addEventListener("click", leave);
+leaveBtnMobile?.addEventListener("click", leave);
+
+function leave(){
+  cleanupSocket();
+  localStorage.removeItem("nick");
   showAuthUI();
 }
 
+/* ===== auto login ===== */
+const savedNick = localStorage.getItem("nick");
+if (savedNick && savedNick.trim().length>=2){
+  nickInput.value = savedNick;
+  connectAndJoin(savedNick.trim().slice(0,20));
+} else {
+  showAuthUI();
+}
