@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Общалка</title>
+  <title>LAN Chat</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
 
-  <!-- Экран входа -->
   <section class="auth" id="authScreen">
     <div class="auth-card">
       <div class="auth-brand">
@@ -29,10 +28,8 @@
     </div>
   </section>
 
-  <!-- Основной интерфейс -->
   <div class="app hidden" id="mainApp">
 
-    <!-- Mobile header -->
     <header class="m-top">
       <div class="m-title">
         <span class="m-dot" id="mDot"></span>
@@ -63,8 +60,7 @@
       </div>
 
       <ul class="users" id="usersList"></ul>
-
-      <div class="sb-footer">Сервер: Render / Socket.IO</div>
+      <div class="sb-footer">Server: Render</div>
     </aside>
 
     <main class="chat">
@@ -80,17 +76,4 @@
       </section>
 
       <footer class="composer">
-        <form id="msgForm" class="composer-form">
-          <button class="mic" id="micBtn" type="button" title="Голосовое">🎤</button>
-          <input id="msg" type="text" placeholder="Сообщение" maxlength="500" autocomplete="off" />
-          <button class="send" id="sendBtn" type="submit" title="Отправить">➤</button>
-        </form>
-      </footer>
-    </main>
-
-  </div>
-
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="./app.js"></script>
-</body>
-</html>
+        <form id="msgFor
