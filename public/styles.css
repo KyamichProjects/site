@@ -228,6 +228,13 @@ body{
 .msg .text{white-space:pre-wrap;word-break:break-word;line-height:1.35}
 .msg .time{font-size:11px;color:var(--muted);text-align:right;margin-top:6px}
 
+/* audio player */
+.msg audio{
+  width: 260px;
+  max-width: 100%;
+  margin-top: 6px;
+}
+
 /* COMPOSER */
 .composer{
   padding:10px;
@@ -245,6 +252,21 @@ body{
   color:var(--text);
   outline:none;
 }
+
+.mic{
+  width:46px;height:46px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  cursor:pointer;
+}
+.mic.rec{
+  border-color: rgba(239,68,68,.55);
+  box-shadow: 0 0 0 6px rgba(239,68,68,.12);
+  background: rgba(239,68,68,.12);
+}
+
 .send{
   width:46px;height:46px;
   border-radius:16px;
