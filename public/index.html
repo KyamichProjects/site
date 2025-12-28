@@ -1,141 +1,439 @@
-<!doctype html>
-<html lang="ru">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Колесо фортуны</title>
-  <style>
-    body { font-family: system-ui, Arial; margin: 24px; }
-    .row { display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
-    .card { border:1px solid #ddd; border-radius:12px; padding:16px; max-width:520px; }
-    #wheelWrap { width: 280px; height: 280px; position: relative; margin: 12px auto; }
-    #wheel {
-      width: 280px; height: 280px; border-radius: 50%;
-      border: 10px solid #222; box-sizing: border-box;
-      transform: rotate(0deg);
-      transition: transform 0s;
-      background: conic-gradient(#f2f2f2 0 180deg, #d9d9d9 180deg 360deg);
-    }
-    #pointer {
-      position:absolute; top:-8px; left:50%; transform: translateX(-50%);
-      width:0; height:0;
-      border-left: 14px solid transparent;
-      border-right: 14px solid transparent;
-      border-bottom: 24px solid #e11;
-    }
-    .muted { color:#666; }
-    button { padding:10px 14px; border-radius:10px; border:1px solid #222; background:#fff; cursor:pointer; }
-    button:disabled { opacity:0.5; cursor:not-allowed; }
-    #result { font-size: 20px; font-weight: 700; }
-    code { background:#f5f5f5; padding:2px 6px; border-radius:6px; }
-  </style>
+    <title>Educational RAT Simulator - DEMO ONLY</title>
+    <meta name="description" content="Демонстрация работы RAT для образовательных целей">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .warning h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #e3f2fd;
+            border-bottom: 3px solid #2196f3;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .control-btn {
+            padding: 12px 24px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: #45a049;
+        }
+        
+        .control-btn.danger {
+            background: #f44336;
+        }
+        
+        .control-btn.danger:hover {
+            background: #d32f2f;
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .victim-list {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .victim-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .victim-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .generator {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        input[type="text"] {
+            padding: 12px;
+            width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .rat-file {
+            background: #ffeb3b;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="row">
-    <div class="card">
-      <div><b id="question">Вопрос</b></div>
-      <div class="muted">Твой ID: <code id="myId">...</code></div>
-      <div class="muted">Очередь: <span id="queueLen">0</span></div>
-      <div class="muted">Сейчас ход: <code id="turnId">...</code></div>
-      <div style="margin-top:12px">
-        <button id="spinBtn" disabled>Крутить</button>
-      </div>
-      <div style="margin-top:12px">
-        Результат: <span id="result">—</span>
-      </div>
-      <div class="muted" id="hint" style="margin-top:10px">Подключаемся…</div>
+    <div class="header">
+        <h1>🔬 Educational RAT Simulator</h1>
+        <p>Демонстрационная система для изучения принципов работы удаленного доступа</p>
+    </div>
+    
+    <div class="warning">
+        <h3>⚠️ ВАЖНО: ТОЛЬКО ДЛЯ ОБРАЗОВАТЕЛЬНЫХ ЦЕЛЕЙ</h3>
+        <p>Это демонстрационная система, которая НЕ создает реальные вредоносные файлы. Она имитирует поведение RAT для обучения:</p>
+        <ul>
+            <li><strong>Разрешено:</strong> Изучение на собственном оборудовании, тестирование в изолированных средах</li>
+            <li><strong>Запрещено:</strong> Использование против других людей без явного разрешения</li>
+            <li><strong>Цель:</strong> Понимание угроз для лучшей защиты систем</li>
+        </ul>
+    </div>
+    
+    <div class="tab-container">
+        <div class="tab active" onclick="switchTab('create')">Создать RAT</div>
+        <div class="tab" onclick="switchTab('control')">Панель управления</div>
+        <div class="tab" onclick="switchTab('info')">Информация</div>
+    </div>
+    
+    <div id="create-tab" class="tab-content active">
+        <h2>🔧 Генератор демо-RAT</h2>
+        <p>Эта система создает демонстрационный файл, который имитирует поведение RAT-трояна.</p>
+        
+        <div class="generator">
+            <input type="text" id="ratName" placeholder="Введите имя для RAT (например: game.exe)">
+            <button class="control-btn" onclick="generateRat()">Создать демо-RAT</button>
+        </div>
+        
+        <div class="rat-file" id="ratFile">
+            <h3>📁 Демо-RAT файл создан!</h3>
+            <p>Имя файла: <strong id="fileName"></strong></p>
+            <p>Размер: <strong id="fileSize"></strong> байт</p>
+            <p>Хеш: <strong id="fileHash"></strong></p>
+            <p><em>Это не реальный исполняемый файл, а демонстрация процесса.</em></p>
+        </div>
+        
+        <div class="controls">
+            <h3>📋 Инструкция для демонстрации:</h3>
+            <ol>
+                <li>Создайте "RAT" с именем выше</li>
+                <li>Отправьте этот "файл" другому компьютеру в учебной сети</li>
+                <li>Когда "жертва" "запустит" файл, вы увидите уведомление</li>
+                <li>Перейдите на вкладку "Панель управления" для имитации управления</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div id="control-tab" class="tab-content">
+        <h2>🎮 Панель управления (демо)</h2>
+        
+        <div id="no-victims" style="text-align: center; padding: 40px;">
+            <h3>😔 Нет подключенных "жертв"</h3>
+            <p>В демонстрационном режиме подключения имитируются</p>
+            <button class="control-btn" onclick="simulateVictim()">Имитировать подключение жертвы</button>
+        </div>
+        
+        <div id="victims-list" style="display: none;">
+            <h3>📡 Подключенные системы:</h3>
+            <div class="victim-list">
+                <div class="victim-item">
+                    <div>
+                        <strong>Victim-PC-01</strong><br>
+                        <small>IP: 192.168.1.105 | OS: Windows 10</small>
+                    </div>
+                    <span class="status online">ONLINE</span>
+                </div>
+            </div>
+            
+            <h3>🛠️ Доступные команды (демо):</h3>
+            <div class="controls">
+                <button class="control-btn" onclick="sendCommand('screenshot')">📸 Сделать скриншот (имитация)</button>
+                <button class="control-btn" onclick="sendCommand('cmd')">💻 Открыть терминал (имитация)</button>
+                <button class="control-btn" onclick="sendCommand('keylogger')">⌨️ Начать запись клавиш (имитация)</button>
+                <button class="control-btn" onclick="sendCommand('files')">📁 Показать файлы (имитация)</button>
+                <button class="control-btn" onclick="sendCommand('shutdown')">🔌 Выключить ПК (имитация)</button>
+                <button class="control-btn danger" onclick="sendCommand('format')">💥 Форматировать диск (имитация)</button>
+            </div>
+            
+            <h3>📊 Лог команд:</h3>
+            <div class="log-container" id="commandLog">
+                [SYSTEM] Демонстрационный режим активирован<br>
+                [INFO] Все команды только имитируются<br>
+            </div>
+        </div>
+    </div>
+    
+    <div id="info-tab" class="tab-content">
+        <h2>📚 Образовательная информация</h2>
+        
+        <h3>🤔 Что такое RAT?</h3>
+        <p><strong>RAT (Remote Access Trojan)</strong> - троянская программа удаленного доступа, которая позволяет злоумышленнику контролировать компьютер жертвы без ее ведома.</p>
+        
+        <h3>🔒 Как работают настоящие RAT:</h3>
+        <ol>
+            <li><strong>Создание сервера</strong>: Злоумышленник создает вредоносный файл</li>
+            <li><strong>Распространение</strong>: Файл маскируется под полезную программу</li>
+            <li><strong>Запуск</strong>: Жертва запускает файл, устанавливая бэкдор</li>
+            <li><strong>Подключение</strong>: Злоумышленник получает полный контроль</li>
+            <li><strong>Эксплуатация</strong>: Кража данных, шпионаж, криптомайнинг</li>
+        </ol>
+        
+        <h3>🛡️ Защита от RAT:</h3>
+        <ul>
+            <li>✅ Не открывайте .exe файлы от незнакомцев</li>
+            <li>✅ Используйте антивирус с мониторингом поведения</li>
+            <li>✅ Регулярно обновляйте ОС и программы</li>
+            <li>✅ Используйте брандмауэр</li>
+            <li>✅ Не давайте права администратора неизвестным программам</li>
+        </ul>
+        
+        <h3>🎓 Легальное обучение кибербезопасности:</h3>
+        <p>Для настоящего обучения используйте:</p>
+        <ul>
+            <li><a href="https://www.hackthebox.com" target="_blank">HackTheBox</a> - легальная платформа для пентеста</li>
+            <li><a href="https://tryhackme.com" target="_blank">TryHackMe</a> - интерактивное обучение</li>
+            <li><a href="https://www.vulnhub.com" target="_blank">VulnHub</a> - уязвимые виртуальные машины</li>
+        </ul>
+        
+        <div class="warning">
+            <h3>⚖️ Правовая информация:</h3>
+            <p>Создание и распространение реальных RAT-троянов является уголовным преступлением по статьям 272-274 УК РФ и может привести к лишению свободы на срок до 7 лет.</p>
+            <p>Это демонстрация создана исключительно для образовательных целей и не создает реальных угроз.</p>
+        </div>
     </div>
 
-    <div class="card">
-      <div id="wheelWrap">
-        <div id="pointer"></div>
-        <div id="wheel"></div>
-      </div>
-      <div class="muted" style="text-align:center">
-        Сектора: <b>Да</b> / <b>Нет</b>
-      </div>
-    </div>
-  </div>
-
-  <!-- Socket.IO клиент берём с сервера, чтобы версии точно совпадали -->
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const elQuestion = document.getElementById("question");
-    const elMyId = document.getElementById("myId");
-    const elQueueLen = document.getElementById("queueLen");
-    const elTurnId = document.getElementById("turnId");
-    const elResult = document.getElementById("result");
-    const elHint = document.getElementById("hint");
-    const spinBtn = document.getElementById("spinBtn");
-    const wheel = document.getElementById("wheel");
-
-    let myId = null;
-    let currentTurnId = null;
-    let spinning = false;
-
-    const socket = io({ transports: ["websocket", "polling"] });
-
-    function setHint(t){ elHint.textContent = t; }
-    function canSpin(){ return myId && currentTurnId && myId === currentTurnId && !spinning; }
-    function updateButton(){
-      spinBtn.disabled = !canSpin();
-      if (!myId) return;
-      if (spinning) setHint("Крутится… все смотрят 🙂");
-      else if (myId === currentTurnId) setHint("Твоя очередь! Нажимай «Крутить».");
-      else setHint("Жди своей очереди и смотри вращение.");
-    }
-
-    function animateSpinToResult(resultIndex, durationMs){
-      const sectorStart = resultIndex === 0 ? 0 : 180;
-      const sectorEnd   = resultIndex === 0 ? 180 : 360;
-      const targetInSector = sectorStart + (sectorEnd - sectorStart) * 0.5;
-      const extraTurns = 6;
-      const finalDeg = extraTurns * 360 + (360 - targetInSector);
-      wheel.style.transition = `transform ${durationMs}ms cubic-bezier(0.12, 0.7, 0.12, 1)`;
-      wheel.style.transform = `rotate(${finalDeg}deg)`;
-    }
-
-    socket.on("hello", (msg) => {
-      myId = msg.id;
-      elMyId.textContent = myId;
-      updateButton();
-    });
-
-    socket.on("state", (st) => {
-      elQuestion.textContent = st.question || "Вопрос";
-      elQueueLen.textContent = st.queueLength ?? 0;
-      currentTurnId = st.currentTurnId || null;
-      elTurnId.textContent = currentTurnId || "—";
-      spinning = !!st.spinning;
-      updateButton();
-    });
-
-    socket.on("spin_start", () => {
-      spinning = true;
-      elResult.textContent = "—";
-      wheel.style.transition = "transform 0s";
-      wheel.style.transform = "rotate(0deg)";
-      updateButton();
-    });
-
-    socket.on("spin_result", (msg) => {
-      const durationMs = 4500;
-      animateSpinToResult(msg.resultIndex, durationMs);
-      setTimeout(() => {
-        elResult.textContent = msg.resultValue;
-        spinning = false;
-        updateButton();
-      }, durationMs + 50);
-    });
-
-    socket.on("error_msg", (e) => {
-      if (e?.error === "not_your_turn") setHint("Сейчас не твоя очередь.");
-    });
-
-    spinBtn.addEventListener("click", () => {
-      if (!canSpin()) return;
-      socket.emit("spin");
-    });
-  </script>
+    <script>
+        // Переключение вкладок
+        function switchTab(tabName) {
+            // Скрыть все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Убрать active со всех вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показать нужную вкладку
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Активировать нужную кнопку
+            event.target.classList.add('active');
+        }
+        
+        // Генерация демо-RAT
+        function generateRat() {
+            const name = document.getElementById('ratName').value.trim();
+            if (!name) {
+                alert('Введите имя для RAT!');
+                return;
+            }
+            
+            // Генерируем демонстрационные данные
+            const fileName = name.endsWith('.exe') ? name : name + '.exe';
+            const fileSize = Math.floor(Math.random() * 5000000) + 1000000; // 1-6 MB
+            const fileHash = 'DEMO-' + Math.random().toString(36).substr(2, 16).toUpperCase();
+            
+            // Показываем информацию о файле
+            document.getElementById('fileName').textContent = fileName;
+            document.getElementById('fileSize').textContent = fileSize.toLocaleString();
+            document.getElementById('fileHash').textContent = fileHash;
+            document.getElementById('ratFile').style.display = 'block';
+            
+            // Логируем создание
+            addToLog(`[RAT CREATED] ${fileName} (${(fileSize/1024/1024).toFixed(2)} MB)`);
+            
+            // Симуляция отправки уведомления
+            setTimeout(() => {
+                addToLog('[SYSTEM] Демо-RAT "отправлен" жертве');
+                addToLog('[SYSTEM] Ожидание запуска...');
+            }, 1000);
+        }
+        
+        // Имитация подключения жертвы
+        function simulateVictim() {
+            document.getElementById('no-victims').style.display = 'none';
+            document.getElementById('victims-list').style.display = 'block';
+            
+            addToLog('[VICTIM CONNECTED] Victim-PC-01 подключился');
+            addToLog('[INFO] Система: Windows 10 Pro x64');
+            addToLog('[INFO] IP: 192.168.1.105 (демо)');
+            addToLog('[INFO] Пользователь: Admin (демо)');
+            
+            // Показываем уведомление
+            showNotification('⚠️ Новая жертва подключилась!');
+        }
+        
+        // Отправка команды (демо)
+        function sendCommand(cmd) {
+            const commands = {
+                'screenshot': '[CMD] Скриншот сделан (имитация)',
+                'cmd': '[CMD] Терминал открыт (имитация)',
+                'keylogger': '[CMD] Запись клавиш начата (имитация)',
+                'files': '[CMD] Список файлов получен (имитация)',
+                'shutdown': '[CMD] Команда выключения отправлена (имитация)',
+                'format': '[WARNING] Опасная команда! Только демо (имитация)'
+            };
+            
+            if (commands[cmd]) {
+                addToLog(commands[cmd]);
+                
+                // Для опасных команд показываем предупреждение
+                if (cmd === 'format') {
+                    showNotification('⛔ Опасная команда отправлена (демо)');
+                }
+            }
+        }
+        
+        // Добавление в лог
+        function addToLog(message) {
+            const log = document.getElementById('commandLog');
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `[${timestamp}] ${message}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Показать уведомление
+        function showNotification(message) {
+            // Проверяем поддержку уведомлений
+            if (!("Notification" in window)) {
+                alert(message);
+                return;
+            }
+            
+            // Запрашиваем разрешение
+            if (Notification.permission === "granted") {
+                new Notification("Educational RAT Demo", {
+                    body: message,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23667eea"/></svg>'
+                });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification("Educational RAT Demo", {
+                            body: message,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23667eea"/></svg>'
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Запрашиваем разрешение на уведомления
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+            
+            // Добавляем начальное сообщение в лог
+            setTimeout(() => {
+                addToLog('[SYSTEM] Демонстрационная система готова');
+                addToLog('[INFO] Все действия имитируются и безопасны');
+            }, 500);
+        });
+    </script>
 </body>
 </html>
