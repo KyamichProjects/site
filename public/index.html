@@ -2,94 +2,140 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LAN Chat</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Колесо фортуны</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 24px; }
+    .row { display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+    .card { border:1px solid #ddd; border-radius:12px; padding:16px; max-width:520px; }
+    #wheelWrap { width: 280px; height: 280px; position: relative; margin: 12px auto; }
+    #wheel {
+      width: 280px; height: 280px; border-radius: 50%;
+      border: 10px solid #222; box-sizing: border-box;
+      transform: rotate(0deg);
+      transition: transform 0s;
+      background: conic-gradient(#f2f2f2 0 180deg, #d9d9d9 180deg 360deg);
+    }
+    #pointer {
+      position:absolute; top:-8px; left:50%; transform: translateX(-50%);
+      width:0; height:0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-bottom: 24px solid #e11;
+    }
+    .muted { color:#666; }
+    button { padding:10px 14px; border-radius:10px; border:1px solid #222; background:#fff; cursor:pointer; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    #result { font-size: 20px; font-weight: 700; }
+    code { background:#f5f5f5; padding:2px 6px; border-radius:6px; }
+  </style>
 </head>
 <body>
-
-  <!-- Экран входа -->
-  <section class="auth" id="authScreen">
-    <div class="auth-card">
-      <div class="auth-brand">
-        <div class="auth-logo">✈️</div>
-        <div>
-          <div class="auth-title">LAN Chat</div>
-          <div class="auth-sub">Введите ник и войдите в общий чат</div>
-        </div>
+  <div class="row">
+    <div class="card">
+      <div><b id="question">Вопрос</b></div>
+      <div class="muted">Твой ID: <code id="myId">...</code></div>
+      <div class="muted">Очередь: <span id="queueLen">0</span></div>
+      <div class="muted">Сейчас ход: <code id="turnId">...</code></div>
+      <div style="margin-top:12px">
+        <button id="spinBtn" disabled>Крутить</button>
       </div>
-
-      <form id="regForm" class="auth-form">
-        <label class="label" for="nick">Ник</label>
-        <input id="nick" type="text" maxlength="20" placeholder="например: Kamil" required />
-        <button class="primary" type="submit">Войти</button>
-        <div class="toast" id="toast"></div>
-        <div class="tip">Ник видят все. До 20 символов.</div>
-      </form>
+      <div style="margin-top:12px">
+        Результат: <span id="result">—</span>
+      </div>
+      <div class="muted" id="hint" style="margin-top:10px">Подключаемся…</div>
     </div>
-  </section>
 
-  <!-- Основной интерфейс -->
-  <div class="app hidden" id="mainApp">
-
-    <!-- Mobile header -->
-    <header class="m-top">
-      <div class="m-title">
-        <span class="m-dot" id="mDot"></span>
-        <span>LAN Chat</span>
+    <div class="card">
+      <div id="wheelWrap">
+        <div id="pointer"></div>
+        <div id="wheel"></div>
       </div>
-      <button class="icon-btn" id="leaveBtnMobile" title="Выйти">⎋</button>
-    </header>
-
-    <aside class="sidebar">
-      <div class="sb-top">
-        <div class="profile">
-          <div class="avatar" id="meAvatar">K</div>
-          <div class="pinfo">
-            <div class="pname" id="meName">Гость</div>
-            <div class="pstatus" id="statusLine">Оффлайн</div>
-          </div>
-        </div>
-        <button class="icon-btn" id="leaveBtn" title="Выйти">⎋</button>
+      <div class="muted" style="text-align:center">
+        Сектора: <b>Да</b> / <b>Нет</b>
       </div>
-
-      <div class="sb-search">
-        <input id="searchInput" type="text" placeholder="Поиск участников…" />
-      </div>
-
-      <div class="sb-section">
-        <div class="sb-title">Участники</div>
-        <div class="sb-pill" id="onlineCount">0 онлайн</div>
-      </div>
-
-      <ul class="users" id="usersList"></ul>
-
-      <div class="sb-footer">Сервер: Render / Socket.IO</div>
-    </aside>
-
-    <main class="chat">
-      <header class="chat-top">
-        <div>
-          <div class="chat-name">Общий чат</div>
-          <div class="chat-sub" id="chatSub">Подключение…</div>
-        </div>
-      </header>
-
-      <section class="chat-body" id="feedWrap">
-        <div class="feed" id="feed"></div>
-      </section>
-
-      <footer class="composer">
-        <form id="msgForm" class="composer-form">
-          <input id="msg" type="text" placeholder="Сообщение" maxlength="500" autocomplete="off" />
-          <button class="send" type="submit" title="Отправить">➤</button>
-        </form>
-      </footer>
-    </main>
-
+    </div>
   </div>
 
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
-  <script src="./app.js"></script>
+  <!-- Socket.IO клиент берём с сервера, чтобы версии точно совпадали -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const elQuestion = document.getElementById("question");
+    const elMyId = document.getElementById("myId");
+    const elQueueLen = document.getElementById("queueLen");
+    const elTurnId = document.getElementById("turnId");
+    const elResult = document.getElementById("result");
+    const elHint = document.getElementById("hint");
+    const spinBtn = document.getElementById("spinBtn");
+    const wheel = document.getElementById("wheel");
+
+    let myId = null;
+    let currentTurnId = null;
+    let spinning = false;
+
+    const socket = io({ transports: ["websocket", "polling"] });
+
+    function setHint(t){ elHint.textContent = t; }
+    function canSpin(){ return myId && currentTurnId && myId === currentTurnId && !spinning; }
+    function updateButton(){
+      spinBtn.disabled = !canSpin();
+      if (!myId) return;
+      if (spinning) setHint("Крутится… все смотрят 🙂");
+      else if (myId === currentTurnId) setHint("Твоя очередь! Нажимай «Крутить».");
+      else setHint("Жди своей очереди и смотри вращение.");
+    }
+
+    function animateSpinToResult(resultIndex, durationMs){
+      const sectorStart = resultIndex === 0 ? 0 : 180;
+      const sectorEnd   = resultIndex === 0 ? 180 : 360;
+      const targetInSector = sectorStart + (sectorEnd - sectorStart) * 0.5;
+      const extraTurns = 6;
+      const finalDeg = extraTurns * 360 + (360 - targetInSector);
+      wheel.style.transition = `transform ${durationMs}ms cubic-bezier(0.12, 0.7, 0.12, 1)`;
+      wheel.style.transform = `rotate(${finalDeg}deg)`;
+    }
+
+    socket.on("hello", (msg) => {
+      myId = msg.id;
+      elMyId.textContent = myId;
+      updateButton();
+    });
+
+    socket.on("state", (st) => {
+      elQuestion.textContent = st.question || "Вопрос";
+      elQueueLen.textContent = st.queueLength ?? 0;
+      currentTurnId = st.currentTurnId || null;
+      elTurnId.textContent = currentTurnId || "—";
+      spinning = !!st.spinning;
+      updateButton();
+    });
+
+    socket.on("spin_start", () => {
+      spinning = true;
+      elResult.textContent = "—";
+      wheel.style.transition = "transform 0s";
+      wheel.style.transform = "rotate(0deg)";
+      updateButton();
+    });
+
+    socket.on("spin_result", (msg) => {
+      const durationMs = 4500;
+      animateSpinToResult(msg.resultIndex, durationMs);
+      setTimeout(() => {
+        elResult.textContent = msg.resultValue;
+        spinning = false;
+        updateButton();
+      }, durationMs + 50);
+    });
+
+    socket.on("error_msg", (e) => {
+      if (e?.error === "not_your_turn") setHint("Сейчас не твоя очередь.");
+    });
+
+    spinBtn.addEventListener("click", () => {
+      if (!canSpin()) return;
+      socket.emit("spin");
+    });
+  </script>
 </body>
 </html>
