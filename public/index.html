@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Bank</title>
+    <title>LeoBank Mobile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -11,9 +12,13 @@
 
     <div id="auth-screen" class="screen">
         <div class="auth-card">
-            <h2>Введите ключ</h2>
-            <input type="password" id="auth-key" placeholder="Ключ доступа">
-            <button onclick="login()">Войти</button>
+            <div class="auth-logo">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <h2>Безопасный вход</h2>
+            <p>Введите ваш секретный ключ</p>
+            <input type="password" id="auth-key" placeholder="Ключ доступа..." autofocus>
+            <button onclick="login()" class="login-btn">Войти в банк</button>
         </div>
     </div>
 
@@ -23,66 +28,107 @@
             <div class="header-gradient">
                 <div class="balance-container">
                     <h1 id="user-balance">0.00 <span>₼</span></h1>
-                    <p>Личные средства</p>
+                    <p>Доступный баланс</p>
                 </div>
                 
-                <div class="action-buttons">
-                    <div class="action" onclick="showModal('topup')">
-                        <div class="icon">+</div>
-                        <span>Пополнить</span>
-                    </div>
-                    <div class="action" onclick="showModal('transfer')">
-                        <div class="icon">→</div>
-                        <span>Перевести</span>
+                <div class="card-wrapper">
+                    <div class="card-preview" onclick="toggleCardAnim()">
+                        <div class="card-front">
+                            <div class="card-chip"></div>
+                            <div class="card-brand">LeoBank</div>
+                            <div class="card-number" id="card-num-display">4098 5844 **** ****</div>
+                            <div class="card-holder" id="card-holder-display">ПОЛЬЗОВАТЕЛЬ</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card-preview" onclick="toggleCardAnim()">
-                    <div class="card-chip"></div>
-                    <div class="card-logo">LeoBank</div>
-                    <div class="card-number" id="card-num-display">**** **** **** ****</div>
+                <div class="action-buttons">
+                    <div class="action" onclick="showModal('topup')">
+                        <div class="icon-circle"><i class="fas fa-plus"></i></div>
+                        <span>Пополнить</span>
+                    </div>
+                    <div class="action" onclick="showModal('transfer')">
+                        <div class="icon-circle"><i class="fas fa-arrow-right"></i></div>
+                        <span>Перевод</span>
+                    </div>
                 </div>
             </div>
 
             <div class="history-section">
-                <h3>История транзакций</h3>
+                <div class="section-title">
+                    <h3>Последние операции</h3>
+                    <i class="fas fa-magnifying-glass"></i>
+                </div>
                 <div id="history-list">
-                    <p class="empty">У вас пока нет операций</p>
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p>Здесь появится история транзакций</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="page-profile" class="page hidden">
             <div class="profile-header">
-                <div class="avatar">👤</div>
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
                 <h2 id="display-name">Пользователь</h2>
+                <p id="display-status">Клиент LeoBank</p>
             </div>
-            <div class="profile-settings">
-                <input type="text" id="new-name" placeholder="Введите имя">
-                <button onclick="updateName()">Сохранить имя</button>
+            
+            <div class="profile-menu">
+                <button class="menu-btn" onclick="promptRename()">
+                    <i class="fas fa-pen"></i>
+                    <span>Изменить имя профиля</span>
+                    <i class="fas fa-chevron-right arrow"></i>
+                </button>
+                <button class="menu-btn" onclick="location.reload()">
+                    <i class="fas fa-right-from-bracket"></i>
+                    <span>Выйти из аккаунта</span>
+                    <i class="fas fa-chevron-right arrow"></i>
+                </button>
             </div>
         </div>
 
         <div id="page-admin" class="page hidden">
-            <h3>Управление пользователями</h3>
-            <div id="admin-user-list"></div>
+            <div class="admin-header">
+                <h3><i class="fas fa-user-gear"></i> Панель управления</h3>
+            </div>
+            <div id="admin-user-list" class="user-list-container">
+                </div>
         </div>
 
         <nav class="bottom-nav">
-            <div onclick="switchPage('main')">🏠<span>Главная</span></div>
-            <div onclick="switchPage('profile')">👤<span>Профиль</span></div>
-            <div id="nav-admin" class="hidden" onclick="switchPage('admin')">⚙️<span>Админ</span></div>
+            <div class="nav-item active" id="nav-main" onclick="switchPage('main')">
+                <i class="fas fa-house"></i>
+                <span>Главная</span>
+            </div>
+            <div class="nav-item" id="nav-profile" onclick="switchPage('profile')">
+                <i class="fas fa-circle-user"></i>
+                <span>Профиль</span>
+            </div>
+            <div id="nav-admin" class="nav-item hidden" onclick="switchPage('admin')">
+                <i class="fas fa-gears"></i>
+                <span>Админ</span>
+            </div>
         </nav>
     </div>
 
     <div id="modal-overlay" class="hidden">
-        <div class="modal">
-            <h3 id="modal-title"></h3>
-            <input type="text" id="modal-input-1" placeholder="">
-            <input type="number" id="modal-input-2" placeholder="Сумма">
-            <div class="modal-btns">
-                <button onclick="closeModal()">Отмена</button>
-                <button id="modal-confirm-btn">Ок</button>
+        <div class="modal-card">
+            <div class="modal-line"></div>
+            <h3 id="modal-title">Операция</h3>
+            <div class="modal-inputs">
+                <input type="text" id="modal-input-1" placeholder="Номер карты">
+                <div class="amount-input-wrapper">
+                    <input type="number" id="modal-input-2" placeholder="0.00">
+                    <span>₼</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+                <button class="btn-confirm" id="modal-confirm-btn">Подтвердить</button>
             </div>
         </div>
     </div>
