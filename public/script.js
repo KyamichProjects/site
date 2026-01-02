@@ -1,111 +1,104 @@
 const socket = io();
 let myData = null;
-
-// Пытаемся зайти автоматически при загрузке, если есть данные
-window.onload = () => {
-    const savedId = localStorage.getItem('bank_user_id');
-    const savedKey = localStorage.getItem('bank_key');
-    if (savedId && savedKey) {
-        socket.emit('auth', { savedId, key: savedKey });
-    }
-};
+let currentModalMode = '';
 
 function login() {
     const key = document.getElementById('auth-key').value;
-    if (!key) return alert("Введите ключ");
-    
-    // Отправляем ключ на сервер
-    socket.emit('auth', { key: key });
+    socket.emit('auth', { key });
 }
 
-socket.on('auth_success', ({ userData, allUsers }) => {
+socket.on('auth_success', ({ userData }) => {
     myData = userData;
-    // Сохраняем сессию
     localStorage.setItem('bank_user_id', userData.id);
-    localStorage.setItem('bank_key', userData.role === 'admin' ? 'ADMINER' : 'DOSTUP');
-
-    // Скрываем вход, показываем приложение
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
-    
-    if (userData.role === 'admin') {
-        document.getElementById('nav-admin').classList.remove('hidden');
-    }
-    
+    if (userData.role === 'admin') document.getElementById('nav-admin').classList.remove('hidden');
     updateUI();
-    if (allUsers) renderAdminList(allUsers);
-});
-
-socket.on('auth_error', (msg) => {
-    alert(msg);
 });
 
 function updateUI() {
     document.getElementById('user-balance').innerHTML = `${myData.balance.toFixed(2)} <span>₼</span>`;
     document.getElementById('card-num-display').innerText = myData.card;
-    document.getElementById('card-holder-display').innerText = myData.name.toUpperCase();
     document.getElementById('display-name').innerText = myData.name;
+    document.getElementById('card-holder-display').innerText = myData.name.toUpperCase();
 }
 
-function switchPage(pageId) {
-    // Скрываем все страницы
-    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    // Показываем нужную
-    document.getElementById(`page-${pageId}`).classList.remove('hidden');
+// УПРАВЛЕНИЕ МОДАЛКОЙ
+function showModal(mode) {
+    currentModalMode = mode;
+    const overlay = document.getElementById('modal-overlay');
+    const title = document.getElementById('modal-title');
+    const inputCard = document.getElementById('modal-input-1');
     
-    // Обновляем иконки в навигации
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    document.getElementById(`nav-${pageId}`).classList.add('active');
+    overlay.classList.remove('hidden');
+    inputCard.value = '';
+    document.getElementById('modal-input-2').value = '';
+
+    if (mode === 'transfer') {
+        title.innerText = "Перевод на карту";
+        inputCard.placeholder = "Номер карты получателя";
+    } else {
+        title.innerText = "Пополнить с карты";
+        inputCard.placeholder = "Номер карты списания";
+    }
 }
 
-function toggleCardAnim() {
-    document.querySelector('.card-preview').classList.toggle('active');
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+document.getElementById('modal-confirm-btn').onclick = () => {
+    const card = document.getElementById('modal-input-1').value;
+    const amount = document.getElementById('modal-input-2').value;
+
+    if (!card || !amount) return alert("Заполните поля");
+
+    if (currentModalMode === 'transfer') {
+        socket.emit('send_transfer', { targetCard: card, amount });
+    } else {
+        socket.emit('request_topup', { targetCard: card, amount });
+    }
+    closeModal();
+};
+
+// Уведомление о запросе (Да/Нет)
+socket.on('notification_request', ({ fromId, fromName, amount }) => {
+    const res = confirm(`Пользователь ${fromName} просит снять с вашей карты ${amount} ₼. Разрешить?`);
+    socket.emit('confirm_topup', { fromId, amount, status: res ? 'yes' : 'no' });
+});
+
+socket.on('update_data', (data) => { myData = data; updateUI(); });
+
+// Остальные функции (switchPage, toggleCardAnim, adminAction) остаются как были
+function switchPage(p) {
+    document.querySelectorAll('.page').forEach(pg => pg.classList.add('hidden'));
+    document.getElementById(`page-${p}`).classList.remove('hidden');
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    document.getElementById(`nav-${p}`).classList.add('active');
 }
+
+function toggleCardAnim() { document.querySelector('.card-preview').classList.toggle('active'); }
 
 function promptRename() {
-    const newName = prompt("Введите новое имя:");
-    if (newName) {
-        socket.emit('update_name', { userId: myData.id, name: newName });
-    }
+    const n = prompt("Новое имя:");
+    if(n) socket.emit('update_name', { userId: myData.id, name: n });
 }
 
-// При получении новых данных от сервера
-socket.on('update_data', (data) => {
-    myData = data;
-    updateUI();
-});
-
-// Обновление списка для админа
-socket.on('update_admin_list', (users) => {
-    if (myData && myData.role === 'admin') {
-        renderAdminList(users);
-    }
-});
+socket.on('update_admin_list', (list) => renderAdminList(list));
 
 function renderAdminList(users) {
-    const list = document.getElementById('admin-user-list');
-    list.innerHTML = '';
-    users.forEach(user => {
-        const div = document.createElement('div');
-        div.style.cssText = "background:#111; margin:10px; padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;";
-        div.innerHTML = `
-            <div>
-                <div style="font-weight:bold">${user.name} ${user.id === myData.id ? '(Вы)' : ''}</div>
-                <div style="font-size:12px; color:#888">${user.card}</div>
-                <div style="color:var(--primary)">${user.balance.toFixed(2)} ₼</div>
-            </div>
-            <div>
-                <button onclick="adminAction('${user.id}', 'add')" style="background:var(--primary); border:none; padding:8px; border-radius:5px; margin-right:5px;">+</button>
-                <button onclick="adminAction('${user.id}', 'sub')" style="background:#ff4444; border:none; padding:8px; border-radius:5px;">-</button>
-            </div>
-        `;
-        list.appendChild(div);
+    const container = document.getElementById('admin-user-list');
+    if (!container) return;
+    container.innerHTML = '';
+    users.forEach(u => {
+        const d = document.createElement('div');
+        d.className = 'user-item';
+        d.style.background = '#111'; d.style.margin = '10px'; d.style.padding = '15px'; d.style.borderRadius = '12px';
+        d.innerHTML = `<div><b>${u.name}</b><br><small>${u.card}</small><br>${u.balance}₼</div>
+        <button onclick="adminAction('${u.id}', 'add')">+</button> <button onclick="adminAction('${u.id}', 'sub')">-</button>`;
+        container.appendChild(d);
     });
 }
 
-function adminAction(userId, type) {
-    const amount = prompt("Сумма:");
-    if (amount) {
-        socket.emit('admin_balance_manage', { targetId: userId, amount, type });
-    }
+function adminAction(id, type) {
+    const a = prompt("Сумма:");
+    if(a) socket.emit('admin_balance_manage', { targetId: id, amount: a, type });
 }
