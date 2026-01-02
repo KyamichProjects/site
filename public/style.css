@@ -1,47 +1,79 @@
 :root {
-    --primary: #000;
-    --accent: #00ff88;
-    --bg-grad: linear-gradient(180deg, #b8f7e5 0%, #f4f7f6 40%);
+    --primary-bg: linear-gradient(180deg, #b8f7e5 0%, #f4f7f6 40%);
+    --card-black: #0b0b0b;
+    --accent-green: #00ff88;
+    --text-main: #000000;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body, html { margin: 0; padding: 0; font-family: -apple-system, sans-serif; background: #f4f7f6; height: 100%; }
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f4f7f6;
+}
 
-.hidden { display: none !important; }
+/* Фон как на скриншоте 1 */
+.header-main {
+    background: var(--primary-bg);
+    padding: 40px 20px 20px;
+    text-align: center;
+}
 
-/* Header & Balance */
-.header-main { background: var(--bg-grad); padding: 50px 20px 20px; text-align: center; }
-.balance-block h1 { font-size: 42px; margin: 0; font-weight: 700; }
-.balance-block h1 span { font-size: 22px; color: #555; }
-.balance-block p { color: #666; font-size: 14px; margin-top: 5px; }
+/* Красивое выезжающее окно (Drawer) */
+.drawer-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+}
 
-/* Quick Actions */
-.quick-actions { display: flex; justify-content: center; gap: 30px; margin: 30px 0; }
-.q-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-.q-icon { width: 55px; height: 55px; background: white; border-radius: 50%; display: flex; 
-          align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-.q-item span { font-size: 12px; color: #333; }
+.drawer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    padding: 25px;
+    box-sizing: border-box;
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+}
 
-/* LeoBank Card */
-.leobank-card { width: 300px; height: 170px; margin: 0 auto; perspective: 1000px; }
-.card-inner { width: 100%; height: 100%; background: #000; border-radius: 18px; color: white; padding: 20px; position: relative; }
-.chip { width: 40px; height: 30px; background: #d4af37; border-radius: 6px; margin-bottom: 40px; }
-.logo { position: absolute; top: 20px; right: 20px; font-weight: bold; font-size: 18px; }
-.number { font-family: 'Courier New', monospace; font-size: 19px; letter-spacing: 2px; }
+/* Поля ввода как в приложении */
+input {
+    width: 100%;
+    padding: 18px;
+    margin-bottom: 15px;
+    border-radius: 15px;
+    border: 1px solid #eee;
+    background: #f9f9f9;
+    font-size: 16px;
+    outline: none;
+    box-sizing: border-box;
+}
 
-/* Drawer (Красивое окошко снизу) */
-.drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
-.drawer { position: absolute; bottom: 0; width: 100%; background: white; border-top-left-radius: 25px; 
-          border-top-right-radius: 25px; padding: 20px; animation: slideUp 0.3s ease-out; }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+/* Кнопка "Подтвердить" */
+.btn-confirm {
+    width: 100%;
+    padding: 18px;
+    background-color: var(--accent-green);
+    border: none;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
 
-.drawer-handle { width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; }
-.drawer input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #eee; background: #f9f9f9; margin-bottom: 15px; font-size: 16px; }
-.btn-confirm { width: 100%; padding: 16px; background: var(--accent); border: none; border-radius: 12px; font-weight: bold; font-size: 16px; }
-
-/* Tab Bar */
-.tab-bar { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; 
-           justify-content: space-around; align-items: center; border-top: 1px solid #eee; }
-.tab { display: flex; flex-direction: column; align-items: center; color: #999; font-size: 11px; }
-.tab.active { color: var(--primary); }
-.tab i { font-size: 22px; margin-bottom: 4px; }
+/* Иконки действий */
+.q-icon {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 8px;
+}
