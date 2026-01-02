@@ -1,5 +1,43 @@
 const socket = io();
 let myData = null;
+
+// ПРОВЕРКА ПРИ ЗАГРУЗКЕ: Вспоминаем пользователя
+window.addEventListener('load', () => {
+    const savedId = localStorage.getItem('bank_user_id');
+    if (savedId) {
+        // Если ID есть, пробуем войти автоматически
+        socket.emit('auth', { savedId: savedId });
+    }
+});
+
+function login() {
+    const key = document.getElementById('auth-key').value;
+    if (!key) return;
+    socket.emit('auth', { key: key });
+}
+
+socket.on('auth_success', ({ userData }) => {
+    myData = userData;
+    
+    // ЗАПОМИНАЕМ ID в браузере навсегда
+    localStorage.setItem('bank_user_id', userData.id);
+
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    
+    if (userData.role === 'admin') {
+        document.getElementById('nav-admin').classList.remove('hidden');
+    }
+    updateUI();
+});
+
+// Кнопка выхода (если захочешь сбросить память)
+function logout() {
+    localStorage.removeItem('bank_user_id');
+    location.reload();
+}
+const socket = io();
+let myData = null;
 let currentModalMode = '';
 
 function login() {
@@ -102,3 +140,4 @@ function adminAction(id, type) {
     const a = prompt("Сумма:");
     if(a) socket.emit('admin_balance_manage', { targetId: id, amount: a, type });
 }
+
