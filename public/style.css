@@ -1,128 +1,47 @@
 :root {
-    --primary: #00ff88;
-    --primary-dark: #00cc6d;
-    --bg: #000000;
-    --card-bg: #111111;
-    --text: #ffffff;
-    --gray: #888888;
+    --primary: #000;
+    --accent: #00ff88;
+    --bg-grad: linear-gradient(180deg, #b8f7e5 0%, #f4f7f6 40%);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-
-body { background: var(--bg); color: var(--text); overflow: hidden; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body, html { margin: 0; padding: 0; font-family: -apple-system, sans-serif; background: #f4f7f6; height: 100%; }
 
 .hidden { display: none !important; }
 
-/* Экран входа */
-#auth-screen {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
-    padding: 20px;
-}
+/* Header & Balance */
+.header-main { background: var(--bg-grad); padding: 50px 20px 20px; text-align: center; }
+.balance-block h1 { font-size: 42px; margin: 0; font-weight: 700; }
+.balance-block h1 span { font-size: 22px; color: #555; }
+.balance-block p { color: #666; font-size: 14px; margin-top: 5px; }
 
-.auth-card {
-    width: 100%;
-    max-width: 350px;
-    text-align: center;
-    animation: fadeIn 0.8s ease;
-}
+/* Quick Actions */
+.quick-actions { display: flex; justify-content: center; gap: 30px; margin: 30px 0; }
+.q-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.q-icon { width: 55px; height: 55px; background: white; border-radius: 50%; display: flex; 
+          align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+.q-item span { font-size: 12px; color: #333; }
 
-.auth-logo i {
-    font-size: 60px;
-    color: var(--primary);
-    margin-bottom: 20px;
-}
+/* LeoBank Card */
+.leobank-card { width: 300px; height: 170px; margin: 0 auto; perspective: 1000px; }
+.card-inner { width: 100%; height: 100%; background: #000; border-radius: 18px; color: white; padding: 20px; position: relative; }
+.chip { width: 40px; height: 30px; background: #d4af37; border-radius: 6px; margin-bottom: 40px; }
+.logo { position: absolute; top: 20px; right: 20px; font-weight: bold; font-size: 18px; }
+.number { font-family: 'Courier New', monospace; font-size: 19px; letter-spacing: 2px; }
 
-.auth-card h2 { margin-bottom: 10px; font-size: 24px; }
-.auth-card p { color: var(--gray); font-size: 14px; margin-bottom: 30px; }
+/* Drawer (Красивое окошко снизу) */
+.drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+.drawer { position: absolute; bottom: 0; width: 100%; background: white; border-top-left-radius: 25px; 
+          border-top-right-radius: 25px; padding: 20px; animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-#auth-key {
-    width: 100%;
-    padding: 16px;
-    background: #111;
-    border: 1px solid #333;
-    border-radius: 12px;
-    color: white;
-    font-size: 18px;
-    text-align: center;
-    margin-bottom: 20px;
-    transition: 0.3s;
-}
+.drawer-handle { width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; }
+.drawer input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #eee; background: #f9f9f9; margin-bottom: 15px; font-size: 16px; }
+.btn-confirm { width: 100%; padding: 16px; background: var(--accent); border: none; border-radius: 12px; font-weight: bold; font-size: 16px; }
 
-#auth-key:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
-
-.login-btn {
-    width: 100%;
-    padding: 16px;
-    background: var(--primary);
-    border: none;
-    border-radius: 12px;
-    color: #000;
-    font-weight: bold;
-    font-size: 16px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.login-btn:active { transform: scale(0.98); background: var(--primary-dark); }
-
-/* Основной интерфейс */
-.header-gradient {
-    background: linear-gradient(180deg, #1a1a1a 0%, #000 100%);
-    padding: 40px 20px 20px;
-    text-align: center;
-}
-
-.balance-container h1 { font-size: 48px; margin-bottom: 5px; }
-.balance-container h1 span { color: var(--primary); font-size: 28px; }
-.balance-container p { color: var(--gray); font-size: 14px; }
-
-/* Карта */
-.card-wrapper { perspective: 1000px; margin: 30px 0; }
-.card-preview {
-    width: 300px; height: 180px;
-    background: linear-gradient(135deg, #222 0%, #050505 100%);
-    margin: 0 auto;
-    border-radius: 20px;
-    border: 1px solid #333;
-    position: relative;
-    padding: 20px;
-    text-align: left;
-    transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.card-preview.active { transform: rotateY(180deg) scale(1.05); box-shadow: 0 0 30px rgba(0,255,136,0.1); }
-
-.card-chip { width: 40px; height: 30px; background: #d4af37; border-radius: 5px; margin-bottom: 40px; }
-.card-number { font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 2px; }
-
-/* Кнопки действий */
-.action-buttons { display: flex; justify-content: center; gap: 40px; margin-top: 30px; }
-.action { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
-.icon-circle { width: 55px; height: 55px; background: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
-.icon-circle:active { background: #333; }
-
-/* Навигация */
-.bottom-nav {
-    position: fixed; bottom: 0; width: 100%; height: 80px;
-    background: #080808; display: flex; justify-content: space-around;
-    align-items: center; border-top: 1px solid #222; padding-bottom: 15px;
-}
-.nav-item { color: #555; text-align: center; transition: 0.3s; cursor: pointer; }
-.nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
-.nav-item span { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
-.nav-item.active { color: var(--primary); }
-
-/* Профиль */
-.profile-menu { padding: 20px; }
-.menu-btn {
-    width: 100%; background: #111; border: none; padding: 18px;
-    border-radius: 15px; color: white; display: flex; align-items: center;
-    margin-bottom: 12px; cursor: pointer;
-}
-.menu-btn i:first-child { margin-right: 15px; color: var(--primary); }
-.menu-btn .arrow { margin-left: auto; color: #444; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+/* Tab Bar */
+.tab-bar { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; 
+           justify-content: space-around; align-items: center; border-top: 1px solid #eee; }
+.tab { display: flex; flex-direction: column; align-items: center; color: #999; font-size: 11px; }
+.tab.active { color: var(--primary); }
+.tab i { font-size: 22px; margin-bottom: 4px; }
