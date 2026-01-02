@@ -31,13 +31,16 @@
                         <div class="q-icon"><i class="fas fa-plus"></i></div>
                         <span>Пополнить</span>
                     </div>
-                    <div class="q-item" onclick="openDrawer('transfer')">
-                        <div class="q-icon"><i class="fas fa-arrow-right"></i></div>
-                        <span>Перевести</span>
-                    </div>
-                </div>
-
-                <div class="leobank-card" onclick="this.classList.toggle('flipped')">
+               <div id="drawer-overlay" class="drawer-overlay">
+    <div class="drawer">
+        <div style="width: 40px; height: 5px; background: #e0e0e0; border-radius: 10px; margin: 0 auto 20px;"></div>
+        <h3>Перевести на карту</h3>
+        <input type="text" placeholder="Номер карты получателя">
+        <input type="number" placeholder="Сумма (₼)">
+        <button class="btn-confirm">Подтвердить</button>
+    </div>
+</div>
+<div class="leobank-card" onclick="this.classList.toggle('flipped')">
                     <div class="card-inner">
                         <div class="card-front">
                             <div class="chip"></div>
@@ -92,3 +95,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
